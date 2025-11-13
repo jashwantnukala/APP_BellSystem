@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Timetable</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #c2e9fb, #a1c4fd);
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      color: #1a1a1a;
+      padding-top: 20px;
+    }
+    .batch-buttons {
+      margin: 20px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #1e7e34;
+    }
+    table {
+      width: 85%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    }
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 15px;
+      text-align: center;
+      font-size: 16px;
+    }
+    th {
+      background-color: #28a745;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .footer {
+      margin-top: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>📅 View Timetable</h1>
+
+  <div class="batch-buttons">
+    <button onclick="loadBatch('batch1')">Batch 1</button>
+    <button onclick="loadBatch('batch2')">Batch 2</button>
+  </div>
+
+  <table id="timetable">
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Time</th>
+        <th>Subject / Activity</th>
+      </tr>
+    </thead>
+    <tbody id="timetableBody">
+      <tr><td colspan="3">Select a batch to view timetable</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer">Digital Bell System © 2025</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
+      authDomain: "digitalbellplisworkthistime.firebaseapp.com",
+      databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
+      projectId: "digitalbellplisworkthistime",
+      storageBucket: "digitalbellplisworkthistime.firebasestorage.app",
+      messagingSenderId: "829189847707",
+      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e",
+      measurementId: "G-W0PYZY1R1M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const tableBody = document.getElementById("timetableBody");
+
+    async function loadBatch(batch) {
+      const dbRef = ref(db);
+      try {
+        const snapshot = await get(child(dbRef, batch));
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          tableBody.innerHTML = "";
+          data.forEach((row) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${row.period}</td>
+              <td>${row.time}</td>
+              <td>${row.subject}</td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        } else {
+          tableBody.innerHTML = `<tr><td colspan="3">No timetable found for ${batch}</td></tr>`;
+        }
+      } catch (err) {
+        console.error("Error loading data:", err);
+        alert("⚠️ Error loading data. Please check Firebase or CORS.");
+      }
+    }
+
+    // ✅ Make loadBatch accessible to HTML buttons
+    window.loadBatch = loadBatch;
+  </script>
+</body>
+</html>
+
