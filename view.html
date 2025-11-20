@@ -1,67 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>View Timetable</title>
+
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
     body {
-      font-family: "Poppins", sans-serif;
-      background: #eef2ff;
-      text-align: center;
+      font-family: "Inter", sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      background: linear-gradient(135deg, #dbe8ff, #eef3ff, #ffffff);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
+
+    /* iCloud Glassy Header */
     h1 {
-      color: #312e81;
+      margin-top: 40px;
+      font-size: 32px;
+      font-weight: 600;
+      color: #1d1d1f;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
+
+    h1::before {
+      content: "📅";
+      font-size: 32px;
+    }
+
+    /* iCloud buttons */
+    .btn-group {
+      margin-top: 15px;
+      display: flex;
+      gap: 15px;
+    }
+
     button {
-      background-color: #6366f1;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      margin: 5px;
-      cursor: pointer;
+      padding: 10px 26px;
       font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      color: #1d1d1f;
+      font-weight: 500;
+      transition: 0.25s;
     }
-    button:hover { background-color: #4f46e5; }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-2px);
+    }
+
+    /* Glass Table Container */
+    .card {
+      width: 85%;
+      max-width: 900px;
+      margin-top: 35px;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(25px);
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
     table {
-      width: 95%;
-      margin: 20px auto;
+      width: 100%;
       border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
     }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
+
+    th {
+      padding: 14px;
+      font-size: 15px;
+      color: #474749;
+      font-weight: 600;
+      text-align: left;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
     }
-    th { background-color: #c7d2fe; }
+
+    td {
+      padding: 12px 14px;
+      font-size: 15px;
+      color: #1d1d1f;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    tr:hover {
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    /* Back link */
     a {
+      margin-top: 25px;
       display: inline-block;
-      margin-top: 10px;
-      color: #4f46e5;
+      font-size: 15px;
+      color: #007aff;
       text-decoration: none;
+      font-weight: 500;
+      transition: 0.2s;
     }
+
+    a:hover { color: #0051c8; }
   </style>
 </head>
 <body>
-  <h1>👀 View Timetable</h1>
-  <div>
+
+  <h1>View Timetable</h1>
+
+  <div class="btn-group">
     <button id="batch1Btn">Batch 1</button>
     <button id="batch2Btn">Batch 2</button>
   </div>
-  <table id="timetable">
-    <thead>
-      <tr><th>Period</th><th>Time</th><th>Subject</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <a href="index.html">⬅️ Back to Home</a>
 
-  <script type="module" defer>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Time</th>
+          <th>Subject</th>
+        </tr>
+      </thead>
+      <tbody id="timetable"></tbody>
+    </table>
+  </div>
+
+  <a href="index.html">← Back to Home</a>
+
+  <!-- Firebase Logic -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
@@ -78,22 +155,29 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const tbody = document.querySelector("#timetable tbody");
+    const tbody = document.getElementById("timetable");
 
     function renderTable(data) {
       tbody.innerHTML = "";
       data.forEach(r => {
-        tbody.innerHTML += `<tr><td>${r.period}</td><td>${r.time}</td><td>${r.subject}</td></tr>`;
+        tbody.innerHTML += `
+          <tr>
+            <td>${r.period}</td>
+            <td>${r.time}</td>
+            <td>${r.subject}</td>
+          </tr>
+        `;
       });
     }
 
     async function loadBatch(batch) {
-      const snapshot = await get(ref(db, `timetables/${batch}`));
-      renderTable(snapshot.exists() ? snapshot.val() : []);
+      const snap = await get(ref(db, `timetables/${batch}`));
+      renderTable(snap.exists() ? snap.val() : []);
     }
 
     document.getElementById("batch1Btn").onclick = () => loadBatch("Batch1");
     document.getElementById("batch2Btn").onclick = () => loadBatch("Batch2");
   </script>
+
 </body>
 </html>
