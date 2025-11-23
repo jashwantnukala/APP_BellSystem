@@ -43,8 +43,22 @@ function login() {
 firebase.auth().onAuthStateChanged((user) => {
     const path = window.location.pathname;
 
-    if (!user && (path.includes("view.html") || path.includes("edit.html"))) {
-        window.location.href = "index.html";
+    // If NOT logged in → block both view.html and edit.html
+    if (!user) {
+        if (path.includes("view.html") || path.includes("edit.html")) {
+            window.location.href = "index.html";
+        }
+    } 
+    
+    // If logged in → still block unauthorized access
+    else {
+        const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
+
+        // Prevent anyone except teacher from opening edit.html
+        if (path.includes("edit.html") && user.uid !== adminUID) {
+            window.location.href = "view.html"; // redirect student to view page
+        }
     }
 });
+
 
