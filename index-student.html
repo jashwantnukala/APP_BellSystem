@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Home</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: linear-gradient(135deg, #dbe8ff, #eef3ff, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-top: 35px;
+      font-size: 32px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .card {
+      margin-top: 30px;
+      width: 90%;
+      max-width: 900px;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px);
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #2d2d2f;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    a.button {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 12px 26px;
+      background: rgba(255,255,255,0.45);
+      border-radius: 10px;
+      text-decoration: none;
+      color: #1d1d1f;
+      font-size: 16px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      backdrop-filter: blur(20px);
+      transition: 0.3s;
+    }
+
+    a.button:hover {
+      background: rgba(255,255,255,0.9);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <h1>Student Dashboard</h1>
+
+  <a href="view.html" class="button">View Timetable</a>
+
+  <div class="card">
+    <div class="section-title">Announcements</div>
+    <ul id="announcements"></ul>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Recent Changes</div>
+    <ul id="changes"></ul>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <script>
+    const db = firebase.database();
+
+    function loadAnnouncements() {
+      db.ref("announcements").on("value", snap => {
+        const list = document.getElementById("announcements");
+        list.innerHTML = "";
+        snap.forEach(item => {
+          list.innerHTML += `<li>${item.val().msg}</li>`;
+        });
+      });
+    }
+
+    function loadChanges() {
+      db.ref("changes").limitToLast(10).on("value", snap => {
+        const list = document.getElementById("changes");
+        list.innerHTML = "";
+        snap.forEach(item => {
+          const v = item.val();
+          list.innerHTML += `<li>${v.action} — <i>${v.editor}</i></li>`;
+        });
+      });
+    }
+
+    loadAnnouncements();
+    loadChanges();
+  </script>
+</body>
+</html>
