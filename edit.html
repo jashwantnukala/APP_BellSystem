@@ -59,6 +59,21 @@
     td {
       padding: 12px;
       border-bottom: 1px solid rgba(0,0,0,0.05);
+      vertical-align: top;
+    }
+
+    .cell-subj, .cell-room {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #d1d1d1;
+      font-size: 14px;
+      box-sizing: border-box;
+      margin-bottom: 6px;
+    }
+
+    .cell-room {
+      font-size: 13px;
     }
 
     input {
@@ -71,7 +86,7 @@
       transition: 0.2s;
       background: white;
     }
-    input:focus {
+    input:focus, textarea:focus {
       border-color: #007aff;
       box-shadow: 0 0 6px rgba(0,122,255,0.35);
     }
@@ -113,12 +128,12 @@
   <button class="batch-btn" id="batch1Btn">Batch 1</button>
   <button class="batch-btn" id="batch2Btn">Batch 2</button>
 
-  <table id="timetableTable">
-    <thead>
-      <tr><th>Period</th><th>Time</th><th>Subject</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- We'll render a weekly grid into this container -->
+  <div id="gridContainer">
+    <table id="timetableTable">
+      <!-- header + body injected by script -->
+    </table>
+  </div>
 
   <button id="saveBtn">💾 Save Changes</button>
   <div id="message"></div>
@@ -136,93 +151,259 @@
 <!-- Your logic -->
 <script src="auth.js"></script>
 
-  <!-- 🔥 FIREBASE LOGIC -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+  <!-- 🔥 WEEKLY GRID FIREBASE LOGIC (v8 compatible) -->
+  <script>
+    (function () {
+      // Use firebase instance initialized by firebase-config.js
+      const db = firebase.database();
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-      authDomain: "digitalbellplisworkthistime.firebaseapp.com",
-      databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-      projectId: "digitalbellplisworkthistime",
-      storageBucket: "digitalbellplisworkthistime.firebasestorage.app",
-      messagingSenderId: "829189847707",
-      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e",
-      measurementId: "G-W0PYZY1R1M"
-    };
+      // ====== DEFAULTS (converted from your BatchA.docx and batchB.docx)
+      // Structure: array of rows. Each row: { time: "...", Monday: {subject, room}, Tuesday: {...}, ... }
+      const defaults = {
+        Batch1: [
+  {
+    "time": "8:00 am - 9:00 am",
+    "Monday": { "subject": "Extra class", "room": "AC 502" },
+    "Tuesday": { "subject": "M-I", "room": "AC 404" },
+    "Wednesday": { "subject": "Extra class", "room": "AC 404" },
+    "Thursday": { "subject": "M-I - Tut: A,B / M-I - Tut: C", "room": "MB207B / MB605" },
+    "Friday": { "subject": "CS:A / CS:B,C", "room": "MB 604 / AC 404, AC 501" }
+  },
+  {
+    "time": "9:00 am- 10:00 am",
+    "Monday": { "subject": "YM", "room": "Ground Floor" },
+    "Tuesday": { "subject": "GM", "room": "AC 404" },
+    "Wednesday": { "subject": "M-I", "room": "AC 404" },
+    "Thursday": { "subject": "GM-Tut : A,B / GM -Tut : C", "room": "MB207B / MB605" },
+    "Friday": { "subject": "CS:A / CS:B,C", "room": "MB 604 / AC 404, AC 501" }
+  },
+  {
+    "time": "10:00 am - 10:30 am",
+    "Monday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Tuesday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Wednesday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Thursday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Friday": { "subject": "SHORT BREAK", "room": "N/A" }
+  },
+  {
+    "time": "10:30 am - 11:30 am",
+    "Monday": { "subject": "M-I", "room": "AC 404" },
+    "Tuesday": { "subject": "AC", "room": "AC 404" },
+    "Wednesday": { "subject": "FAI", "room": "AC 404" },
+    "Thursday": { "subject": "AC : C / EEL 1: A,B", "room": "MB 604/611 / MB 301, MB 306" },
+    "Friday": { "subject": "BXT", "room": "AC 404" }
+  },
+  {
+    "time": "11:30 am - 12:30 pm",
+    "Monday": { "subject": "GM", "room": "AC 404" },
+    "Tuesday": { "subject": "FAI", "room": "AC 404" },
+    "Wednesday": { "subject": "AC", "room": "AC 404" },
+    "Thursday": { "subject": "AC : C / EEL 1: A,B", "room": "MB 604/611 / MB 301, MB 306" },
+    "Friday": { "subject": "AC", "room": "AC 404" }
+  },
+  {
+    "time": "12:30 pm- 13:15 pm",
+    "Monday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Tuesday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Wednesday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Thursday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Friday": { "subject": "LONG BREAK", "room": "N/A" }
+  },
+  {
+    "time": "13:15 pm - 14:15 pm",
+    "Monday": { "subject": "BXT", "room": "N/A" },
+    "Tuesday": { "subject": "N/A", "room": "N/A" },
+    "Wednesday": { "subject": "BXT Tut", "room": "MB 207B / MB 301" },
+    "Thursday": { "subject": "AC : A / EEL 1: B", "room": "MB 604/611 / MB 301, MB 306" },
+    "Friday": { "subject": "AC : B / EEL 1: A,C", "room": "MB 604/611 / MB 301, MB 306" }
+  },
+  {
+    "time": "14:15 pm - 15:15 pm",
+    "Monday": { "subject": "FAI Tut", "room": "MB 614" },
+    "Tuesday": { "subject": "N/A", "room": "N/A" },
+    "Wednesday": { "subject": "N/A", "room": "N/A" },
+    "Thursday": { "subject": "AC : A / EEL 1: B", "room": "MB 604/611 / MB 301, MB 306" },
+    "Friday": { "subject": "AC : B / EEL 1: A,C", "room": "MB 604/611 / MB 301, MB 306" }
+  }
+],
+        Batch2: [
+  {
+    "time": "10:00 am- 11:00 am",
+    "Monday": { "subject": "Extra class", "room": "AC 402" },
+    "Tuesday": { "subject": "N/A", "room": "N/A" },
+    "Wednesday": { "subject": "N/A", "room": "N/A" },
+    "Thursday": { "subject": "AP:A / EEL-1:B,C", "room": "MB 601/MB 605 / MB 207B" },
+    "Friday": { "subject": "AP", "room": "AC 504" }
+  },
+  {
+    "time": "11:00 am  - 12:00 pm",
+    "Monday": { "subject": "Extra class", "room": "AC 402" },
+    "Tuesday": { "subject": "N/A", "room": "N/A" },
+    "Wednesday": { "subject": "N/A", "room": "N/A" },
+    "Thursday": { "subject": "AP:A / EEL-1:B,C", "room": "MB 601/MB 605 / MB 207B" },
+    "Friday": { "subject": "M-I", "room": "AC 504" }
+  },
+  {
+    "time": "12:00 pm  - 12:45 pm",
+    "Monday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Tuesday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Wednesday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Thursday": { "subject": "LONG BREAK", "room": "N/A" },
+    "Friday": { "subject": "LONG BREAK", "room": "N/A" }
+  },
+  {
+    "time": "12:45 pm  - 13:45 pm",
+    "Monday": { "subject": "EG Tut", "room": "MB 207A" },
+    "Tuesday": { "subject": "ICC", "room": "AC 503" },
+    "Wednesday": { "subject": "EG", "room": "AC 503" },
+    "Thursday": { "subject": "AP: A,B / EEL-1: A,B", "room": "MB 601/MB 605 / MB 207B" },
+    "Friday": { "subject": "AP:B / EEL-1:A,C", "room": "MB 601/MB 605 / MB 207B" }
+  },
+  {
+    "time": "13:45 pm  - 14:45 pm",
+    "Monday": { "subject": "FPL Tut", "room": "MB 207A" },
+    "Tuesday": { "subject": "FPL", "room": "AC 503" },
+    "Wednesday": { "subject": "EG", "room": "AC 503" },
+    "Thursday": { "subject": "AP: A,B / EEL-1: A,B", "room": "MB 601/MB 605 / MB 207B" },
+    "Friday": { "subject": "AP:B / EEL-1:A,C", "room": "MB 601/MB 605 / MB 207B" }
+  },
+  {
+    "time": "14:45 pm - 15:15 pm",
+    "Monday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Tuesday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Wednesday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Thursday": { "subject": "SHORT BREAK", "room": "N/A" },
+    "Friday": { "subject": "SHORT BREAK", "room": "N/A" }
+  },
+  {
+    "time": "15:15 pm - 16:15 pm",
+    "Monday": { "subject": "PA", "room": "Ground Floor" },
+    "Tuesday": { "subject": "BET", "room": "AC 503" },
+    "Wednesday": { "subject": "AP", "room": "AC 503" },
+    "Thursday": { "subject": "FPL", "room": "AC 503" },
+    "Friday": { "subject": "BET", "room": "AC 503" }
+  },
+  {
+    "time": "16:15 pm -  17:15 pm",
+    "Monday": { "subject": "MI Tut", "room": "MB 207A" },
+    "Tuesday": { "subject": "AP", "room": "AC 503" },
+    "Wednesday": { "subject": "M-I", "room": "AC 503" },
+    "Thursday": { "subject": "M-I", "room": "AC 503" },
+    "Friday": { "subject": "BET Tut", "room": "MB 207A" }
+  }
+]
+      };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+      // ====== Vars ======
+      let currentBatch = "";
+      const days = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+      const tableEl = document.getElementById("timetableTable");
+      const messageEl = document.getElementById("message");
 
-    let currentBatch = "";
+      // ====== Render weekly grid into the #timetableTable
+      function renderGrid(rows) {
+        // Build header
+        let html = "<thead><tr><th>Time</th>";
+        days.forEach(d => { html += `<th>${d}</th>`; });
+        html += "</tr></thead>";
 
-    /* Default Data (Your 6-period version) */
-    const defaults = {
-      Batch1: [
-        { period: 1, time: "08:00 – 09:00 AM", subject: "Maths" },
-        { period: 2, time: "09:00 – 10:00 AM", subject: "Science" },
-        { period: 3, time: "10:30 – 11:30 AM", subject: "English" },
-        { period: 4, time: "11:30 – 12:30 PM", subject: "History" },
-        { period: 5, time: "01:15 – 02:15 PM", subject: "Geography" },
-        { period: 6, time: "02:15 – 03:15 PM", subject: "Sports" }
-      ],
-      Batch2: [
-        { period: 1, time: "10:00 – 11:00 AM", subject: "Physics" },
-        { period: 2, time: "11:00 – 12:00 PM", subject: "Chemistry" },
-        { period: 3, time: "12:45 – 01:45 PM", subject: "Biology" },
-        { period: 4, time: "01:45 – 02:45 PM", subject: "Maths" },
-        { period: 5, time: "03:15 – 04:15 PM", subject: "English" },
-        { period: 6, time: "04:15 – 05:15 PM", subject: "Computer" }
-      ]
-    };
+        // Build body
+        html += "<tbody>";
+        rows.forEach((r, rowIdx) => {
+          html += `<tr data-row="${rowIdx}">`;
+          html += `<td style="font-weight:600;">${r.time}</td>`;
+          days.forEach(d => {
+            const cell = r[d] || {subject:"N/A", room:"N/A"};
+            const subjEsc = escapeHtml(cell.subject || "N/A");
+            const roomEsc = escapeHtml(cell.room || "N/A");
+            html += `<td>
+                      <input class="cell-subj" data-day="${d}" data-row="${rowIdx}" value="${subjEsc}" placeholder="Subject">
+                      <input class="cell-room" data-day="${d}" data-row="${rowIdx}" value="${roomEsc}" placeholder="Room (or N/A)">
+                    </td>`;
+          });
+          html += "</tr>";
+        });
+        html += "</tbody>";
 
-    const tbody = document.querySelector("#timetableTable tbody");
-
-    function renderTable(rows) {
-      tbody.innerHTML = "";
-      rows.forEach(r => {
-        tbody.innerHTML += `
-        <tr>
-          <td>${r.period}</td>
-          <td><input value="${r.time}"></td>
-          <td><input value="${r.subject}"></td>
-        </tr>`;
-      });
-    }
-
-    async function loadBatch(batch) {
-      currentBatch = batch;
-      const snapshot = await get(ref(db, `timetables/${batch}`));
-
-      if (snapshot.exists()) {
-        renderTable(snapshot.val());
-      } else {
-        renderTable(defaults[batch]);
+        tableEl.innerHTML = html;
       }
-    }
 
-    document.getElementById("batch1Btn").onclick = () => loadBatch("Batch1");
-    document.getElementById("batch2Btn").onclick = () => loadBatch("Batch2");
+      // ====== Load batch from DB or use defaults
+      function loadBatch(batchKey) {
+        currentBatch = batchKey;
+        messageEl.textContent = "";
+        db.ref('timetables/' + batchKey).once('value').then(snapshot => {
+          if (snapshot.exists()) {
+            // snapshot val must be in same structure as defaults: array of rows
+            const val = snapshot.val();
+            renderGrid(val);
+          } else {
+            // Use parsed defaults
+            renderGrid(defaults[batchKey]);
+          }
+        }).catch(err => {
+          alert('Failed to load timetable: ' + err.message);
+        });
+      }
 
-    document.getElementById("saveBtn").onclick = async () => {
-      if (!currentBatch) return alert("Please select a batch first!");
+      // ====== Save current grid to DB
+      function saveCurrentGrid() {
+        if (!currentBatch) { alert("Please select a batch first!"); return; }
+        // read all rows from DOM and build structure
+        const rows = [];
+        const tbody = tableEl.querySelector('tbody');
+        if (!tbody) { alert("Nothing to save"); return; }
+        const trList = Array.from(tbody.querySelectorAll('tr'));
+        trList.forEach(tr => {
+          const rowIdx = tr.getAttribute('data-row');
+          const timeCell = tr.querySelector('td:first-child').textContent;
+          const rowObj = { time: timeCell };
+          days.forEach(d => {
+            const subjInput = tr.querySelector(`.cell-subj[data-day="${d}"][data-row="${rowIdx}"]`);
+            const roomInput = tr.querySelector(`.cell-room[data-day="${d}"][data-row="${rowIdx}"]`);
+            const subj = (subjInput && subjInput.value.trim()) || "N/A";
+            const room = (roomInput && roomInput.value.trim()) || "N/A";
+            rowObj[d] = { subject: subj, room: room };
+          });
+          rows.push(rowObj);
+        });
 
-      const rows = [...tbody.querySelectorAll("tr")].map(r => ({
-        period: r.cells[0].textContent,
-        time: r.cells[1].querySelector("input").value,
-        subject: r.cells[2].querySelector("input").value
-      }));
+        // write to DB
+        db.ref('timetables/' + currentBatch).set(rows)
+          .then(() => {
+            messageEl.textContent = "✅ Timetable Saved!";
+            // optionally log to recentChanges
+            db.ref('recentChanges').push({
+              timestamp: Date.now(),
+              teacher: (firebase.auth().currentUser && firebase.auth().currentUser.email) ? firebase.auth().currentUser.email : "Teacher",
+              batch: currentBatch,
+              day: '',
+              period: '',
+              action: 'Saved full timetable'
+            });
+            setTimeout(()=> messageEl.textContent = "", 2000);
+          })
+          .catch(err => alert('Save failed: ' + err.message));
+      }
 
-      await set(ref(db, `timetables/${currentBatch}`), rows);
+      // ====== Simple HTML escape for values we inject
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g,'&amp;')
+          .replace(/"/g,'&quot;')
+          .replace(/'/g,'&#39;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;');
+      }
 
-      document.getElementById("message").textContent = "✅ Timetable Saved!";
-      setTimeout(() => (document.getElementById("message").textContent = ""), 2000);
-    };
+      // ====== Buttons wiring
+      document.getElementById("batch1Btn").onclick = () => loadBatch("Batch1");
+      document.getElementById("batch2Btn").onclick = () => loadBatch("Batch2");
+      document.getElementById("saveBtn").onclick = saveCurrentGrid;
+
+      // load nothing until teacher selects batch (same as before)
+    })();
   </script>
 
 </body>
 </html>
-
-
-
