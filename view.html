@@ -11,7 +11,7 @@
       padding: 0;
       font-family: "Inter", sans-serif;
       background: linear-gradient(135deg, #dbe8ff, #eef3ff, #ffffff);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -58,41 +58,40 @@
     }
 
     .card {
-      width: 95%;
-      max-width: 1200px;
+      width: 90%;
+      max-width: 1100px;
       margin-top: 35px;
       background: rgba(255, 255, 255, 0.55);
       backdrop-filter: blur(25px);
       border-radius: 18px;
       padding: 25px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th, td {
+      padding: 12px 18px;
       text-align: center;
+      font-size: 15px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
     th {
-      padding: 14px;
-      font-size: 15px;
-      color: #474749;
       font-weight: 600;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
-      background: rgba(255, 255, 255, 0.4);
+      color: #333;
     }
 
-    td {
-      padding: 14px;
-      font-size: 15px;
-      color: #1d1d1f;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-      white-space: pre-line;
-    }
-
-    tr:hover {
-      background: rgba(255, 255, 255, 0.55);
+    .slot {
+      font-weight: 600;
+      color: #000;
+      width: 180px;
+      text-align: left;
     }
 
     a {
@@ -121,7 +120,7 @@
     <table>
       <thead>
         <tr>
-          <th>Time Slot</th>
+          <th>Time</th>
           <th>Monday</th>
           <th>Tuesday</th>
           <th>Wednesday</th>
@@ -133,52 +132,30 @@
     </table>
   </div>
 
-  <a href="index-student.html">← Back to Home</a>
+  <a href="index.html">← Back to Home</a>
 
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-      authDomain: "digitalbellplisworkthistime.firebaseapp.com",
-      databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-      projectId: "digitalbellplisworkthistime",
-      storageBucket: "digitalbellplisworkthistime.firebasestorage.app",
-      messagingSenderId: "829189847707",
-      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e",
-      measurementId: "G-W0PYZY1R1M"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-
     const db = firebase.database();
     const tbody = document.getElementById("timetable");
 
-    function formatCell(dayData) {
-      if (!dayData) return "N/A\nRoom: N/A";
-
-      const subject = dayData.subject?.trim() || "N/A";
-      const room = dayData.room?.trim() || "N/A";
-
-      return `${subject}\nRoom: ${room}`;
-    }
-
-    function renderTable(data) {
+    function renderTable(rows) {
       tbody.innerHTML = "";
 
-      Object.keys(data).forEach(timeSlot => {
-        const row = data[timeSlot];
-
+      rows.forEach(row => {
         tbody.innerHTML += `
           <tr>
-            <td>${timeSlot}</td>
-            <td>${formatCell(row.Mon)}</td>
-            <td>${formatCell(row.Tue)}</td>
-            <td>${formatCell(row.Wed)}</td>
-            <td>${formatCell(row.Thu)}</td>
-            <td>${formatCell(row.Fri)}</td>
+            <td class="slot">${row.time}</td>
+            <td>${row.mon}<br><small>${row.monRoom}</small></td>
+            <td>${row.tue}<br><small>${row.tueRoom}</small></td>
+            <td>${row.wed}<br><small>${row.wedRoom}</small></td>
+            <td>${row.thu}<br><small>${row.thuRoom}</small></td>
+            <td>${row.fri}<br><small>${row.friRoom}</small></td>
           </tr>
         `;
       });
@@ -186,17 +163,17 @@
 
     function loadBatch(batch) {
       db.ref(`timetables/${batch}`).once("value", snap => {
-        if (snap.exists()) {
-          renderTable(snap.val());
-        } else {
-          tbody.innerHTML = `<tr><td colspan="6">No timetable data found</td></tr>`;
+        if (!snap.exists()) {
+          tbody.innerHTML = `<tr><td colspan="6">No data found</td></tr>`;
+          return;
         }
+        renderTable(snap.val());
       });
     }
 
     document.getElementById("batch1Btn").onclick = () => loadBatch("Batch1");
     document.getElementById("batch2Btn").onclick = () => loadBatch("Batch2");
   </script>
+
 </body>
 </html>
-
