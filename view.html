@@ -58,8 +58,8 @@
     }
 
     .card {
-      width: 85%;
-      max-width: 900px;
+      width: 95%;
+      max-width: 1200px;
       margin-top: 35px;
       background: rgba(255, 255, 255, 0.55);
       backdrop-filter: blur(25px);
@@ -71,6 +71,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
+      text-align: center;
     }
 
     th {
@@ -78,15 +79,16 @@
       font-size: 15px;
       color: #474749;
       font-weight: 600;
-      text-align: left;
       border-bottom: 1px solid rgba(0,0,0,0.1);
+      background: rgba(255, 255, 255, 0.4);
     }
 
     td {
-      padding: 12px 14px;
+      padding: 14px;
       font-size: 15px;
       color: #1d1d1f;
       border-bottom: 1px solid rgba(0,0,0,0.06);
+      white-space: pre-line;
     }
 
     tr:hover {
@@ -119,9 +121,12 @@
     <table>
       <thead>
         <tr>
-          <th>Period</th>
-          <th>Time</th>
-          <th>Subject</th>
+          <th>Time Slot</th>
+          <th>Monday</th>
+          <th>Tuesday</th>
+          <th>Wednesday</th>
+          <th>Thursday</th>
+          <th>Friday</th>
         </tr>
       </thead>
       <tbody id="timetable"></tbody>
@@ -132,7 +137,6 @@
 
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
@@ -152,14 +156,29 @@
     const db = firebase.database();
     const tbody = document.getElementById("timetable");
 
+    function formatCell(dayData) {
+      if (!dayData) return "N/A\nRoom: N/A";
+
+      const subject = dayData.subject?.trim() || "N/A";
+      const room = dayData.room?.trim() || "N/A";
+
+      return `${subject}\nRoom: ${room}`;
+    }
+
     function renderTable(data) {
       tbody.innerHTML = "";
-      data.forEach(row => {
+
+      Object.keys(data).forEach(timeSlot => {
+        const row = data[timeSlot];
+
         tbody.innerHTML += `
           <tr>
-            <td>${row.period}</td>
-            <td>${row.time}</td>
-            <td>${row.subject}</td>
+            <td>${timeSlot}</td>
+            <td>${formatCell(row.Mon)}</td>
+            <td>${formatCell(row.Tue)}</td>
+            <td>${formatCell(row.Wed)}</td>
+            <td>${formatCell(row.Thu)}</td>
+            <td>${formatCell(row.Fri)}</td>
           </tr>
         `;
       });
@@ -170,7 +189,7 @@
         if (snap.exists()) {
           renderTable(snap.val());
         } else {
-          tbody.innerHTML = `<tr><td colspan="3">No data found</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6">No timetable data found</td></tr>`;
         }
       });
     }
@@ -180,4 +199,3 @@
   </script>
 </body>
 </html>
-
