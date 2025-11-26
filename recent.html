@@ -1,112 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Recent Changes</title>
+    <meta charset="UTF-8">
+    <title>Recent Changes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f7;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
 
-<style>
-    body {
-        margin: 0;
-        padding: 40px;
-        font-family: "SF Pro Display", "Inter", sans-serif;
-        background: linear-gradient(135deg, #eaf1ff, #ffffff);
-        display: flex;
-        justify-content: center;
-    }
+        .container {
+            max-width: 900px;
+            width: 95%;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
 
-    .card {
-        width: 90%;
-        max-width: 1100px;
-        background: rgba(255, 255, 255, 0.55);
-        backdrop-filter: blur(25px);
-        border-radius: 18px;
-        padding: 25px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #222;
+        }
 
-    h2 {
-        text-align: center;
-        font-size: 30px;
-        margin-bottom: 15px;
-        color: #1d1d1f;
-        font-weight: 600;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
 
-    /* Apple-style search bar */
-    #searchBox {
-        width: 100%;
-        padding: 14px 18px;
-        border-radius: 14px;
-        border: none;
-        background: rgba(255,255,255,0.6);
-        backdrop-filter: blur(15px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.10);
-        font-size: 16px;
-        outline: none;
-        margin-bottom: 20px;
-        transition: 0.25s;
-    }
+        th, td {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: center;
+            font-size: 15px;
+        }
 
-    #searchBox:focus {
-        background: rgba(255,255,255,0.85);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-    }
+        th {
+            background: #4a68ff;
+            color: white;
+            font-weight: 600;
+        }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 900px;
-    }
+        tr:nth-child(even) {
+            background: #f7f9ff;
+        }
 
-    th, td {
-        padding: 14px 18px;
-        text-align: center;
-        border-bottom: 1px solid rgba(0,0,0,0.08);
-        font-size: 15px;
-    }
-
-    th {
-        background: rgba(255,255,255,0.6);
-        font-weight: 600;
-    }
-
-    tr:hover {
-        background: rgba(0,0,0,0.03);
-    }
-
-    .timestamp {
-        font-size: 14px;
-        color: #4a4a4a;
-        font-weight: 500;
-    }
-
-    #loadingRow {
-        text-align: center;
-        font-size: 16px;
-        padding: 20px;
-        color: #444;
-    }
-
-    a {
-        display: block;
-        margin-top: 25px;
-        text-align: center;
-        color: #007aff;
-        font-size: 16px;
-        text-decoration: none;
-    }
-</style>
+        .timestamp {
+            font-size: 14px;
+            color: #444;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="card">
+<div class="container">
     <h2>Recent Timetable Changes</h2>
 
-    <!-- 🔍 Search Bar -->
-    <input type="text" id="searchBox" placeholder="Search by teacher, batch, day, action, or anything…">
-
-    <table>
+    <table id="changesTable">
         <thead>
             <tr>
                 <th>Date & Time</th>
@@ -118,81 +77,61 @@
             </tr>
         </thead>
         <tbody id="changesBody">
-            <tr id="loadingRow"><td colspan="6">Loading...</td></tr>
+            <tr><td colspan="6">Loading...</td></tr>
         </tbody>
     </table>
-
-    <a href="index.html">← Back to Home</a>
 </div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script src="firebase-config.js"></script>
 
 <script>
-const db = firebase.database();
-const tbody = document.getElementById("changesBody");
-const searchBox = document.getElementById("searchBox");
-
-let cachedEntries = []; // store loaded data here for instant searching
-
-function render(entries) {
-    tbody.innerHTML = "";
-
-    if (entries.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='6'>No matching results.</td></tr>";
-        return;
-    }
-
-    entries.forEach(entry => {
-        const date = new Date(entry.timestamp).toLocaleString("en-IN");
-
-        tbody.innerHTML += `
-            <tr>
-                <td class="timestamp">${date}</td>
-                <td>${entry.teacher || "N/A"}</td>
-                <td>${entry.batch || "N/A"}</td>
-                <td>${entry.day || "N/A"}</td>
-                <td>${entry.period || "N/A"}</td>
-                <td>${entry.action || "N/A"}</td>
-            </tr>
-        `;
-    });
+function safe(val) {
+    return (val === undefined || val === null || val === "") ? "N/A" : val;
 }
 
 function loadRecentChanges() {
-    db.ref("recentChanges")
+    const tbody = document.getElementById("changesBody");
+    tbody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+
+    firebase.database().ref("recentChanges")
         .orderByChild("timestamp")
-        .limitToLast(50)
-        .on("value", snapshot => {
+        .limitToLast(100)
+        .once("value", (snapshot) => {
+
+            tbody.innerHTML = "";
+
             if (!snapshot.exists()) {
-                tbody.innerHTML = "<tr><td colspan='6'>No recent updates found.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='6'>No updates found.</td></tr>";
                 return;
             }
 
-            const data = snapshot.val();
-            cachedEntries = Object.values(data).sort((a,b) => b.timestamp - a.timestamp);
+            const entries = Object.values(snapshot.val()).reverse();
 
-            render(cachedEntries);
+            entries.forEach(item => {
+                const date = item.timestamp
+                    ? new Date(item.timestamp).toLocaleString()
+                    : "N/A";
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="timestamp">${safe(date)}</td>
+                        <td>${safe(item.teacher)}</td>
+                        <td>${safe(item.batch)}</td>
+                        <td>${safe(item.day)}</td>
+                        <td>${safe(item.period)}</td>
+                        <td>${safe(item.action)}</td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(() => {
+            tbody.innerHTML = "<tr><td colspan='6'>Error loading data.</td></tr>";
         });
 }
-
-/* 🔍 LIVE SEARCH FILTER */
-searchBox.addEventListener("input", () => {
-    const query = searchBox.value.toLowerCase();
-
-    const filtered = cachedEntries.filter(e =>
-        (e.teacher || "").toLowerCase().includes(query) ||
-        (e.batch || "").toLowerCase().includes(query) ||
-        (e.day || "").toLowerCase().includes(query) ||
-        (e.period || "").toLowerCase().includes(query) ||
-        (e.action || "").toLowerCase().includes(query) ||
-        new Date(e.timestamp).toLocaleString("en-IN").toLowerCase().includes(query)
-    );
-
-    render(filtered);
-});
 
 loadRecentChanges();
 </script>
