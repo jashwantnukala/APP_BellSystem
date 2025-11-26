@@ -144,25 +144,30 @@
     const db = firebase.database();
     const tbody = document.getElementById("timetable");
 
+    function safe(obj, field) {
+      return obj && obj[field] ? obj[field] : "N/A";
+    }
+
     function renderTable(rows) {
       tbody.innerHTML = "";
 
-      rows.forEach(row => {
+      rows.forEach((row) => {
         tbody.innerHTML += `
           <tr>
             <td class="slot">${row.time}</td>
-            <td>${row.mon}<br><small>${row.monRoom}</small></td>
-            <td>${row.tue}<br><small>${row.tueRoom}</small></td>
-            <td>${row.wed}<br><small>${row.wedRoom}</small></td>
-            <td>${row.thu}<br><small>${row.thuRoom}</small></td>
-            <td>${row.fri}<br><small>${row.friRoom}</small></td>
+
+            <td>${safe(row.Monday, "subject")}<br><small>${safe(row.Monday, "room")}</small></td>
+            <td>${safe(row.Tuesday, "subject")}<br><small>${safe(row.Tuesday, "room")}</small></td>
+            <td>${safe(row.Wednesday, "subject")}<br><small>${safe(row.Wednesday, "room")}</small></td>
+            <td>${safe(row.Thursday, "subject")}<br><small>${safe(row.Thursday, "room")}</small></td>
+            <td>${safe(row.Friday, "subject")}<br><small>${safe(row.Friday, "room")}</small></td>
           </tr>
         `;
       });
     }
 
     function loadBatch(batch) {
-      db.ref(`timetables/${batch}`).once("value", snap => {
+      db.ref("timetables/" + batch).once("value", (snap) => {
         if (!snap.exists()) {
           tbody.innerHTML = `<tr><td colspan="6">No data found</td></tr>`;
           return;
