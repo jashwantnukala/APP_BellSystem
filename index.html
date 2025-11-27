@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta-name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Digital Smart Bell System</title>
+
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -12,6 +13,7 @@
       margin: 0;
       text-align: center;
     }
+
     header {
       padding: 40px 0 20px;
     }
@@ -19,6 +21,7 @@
       font-size: 2.2rem;
       margin-bottom: 10px;
     }
+
     button, a {
       display: inline-block;
       text-decoration: none;
@@ -36,6 +39,23 @@
     button:hover, a:hover {
       background-color: #005fa3;
     }
+
+    /* SPECIAL SIMULATOR BUTTON */
+    .sim-btn {
+      margin-top: 40px;
+      background: linear-gradient(135deg, #ff8a00, #e52e71);
+      padding: 18px 40px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 50px;
+      color: white;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    .sim-btn:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #ff9c33, #ff3b8d);
+    }
+
     #login-box {
       margin-top: 30px;
       padding: 20px;
@@ -50,6 +70,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -59,10 +80,10 @@
 
   <h2>Select Your Role</h2>
 
-  <!-- STUDENT BUTTON — DIRECT REDIRECT -->
+  <!-- STUDENT BUTTON — direct redirect -->
   <button onclick="window.location.href='index-student.html'">I am a Student</button>
 
-  <!-- TEACHER BUTTON — SHOW LOGIN -->
+  <!-- TEACHER BUTTON — show login -->
   <button onclick="selectTeacher()">I am a Teacher</button>
 
   <div id="login-box">
@@ -72,6 +93,11 @@
     <button onclick="login()">Login</button>
   </div>
 
+  <!-- ⭐ DIGITAL BELL SIMULATOR BUTTON (CENTERED) -->
+  <button class="sim-btn" onclick="window.location.href='simulator.html'">
+    🎵 Open Digital Bell Simulator
+  </button>
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -80,12 +106,10 @@
   <script src="firebase-config.js"></script>
 
   <script>
-    // SHOW LOGIN BOX FOR TEACHER
     function selectTeacher() {
       document.getElementById('login-box').style.display = 'block';
     }
 
-    // LOGIN FUNCTION (Teacher only)
     function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -100,4 +124,3 @@
 
 </body>
 </html>
-
