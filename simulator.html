@@ -344,72 +344,53 @@
   setInterval(tickClock, 1000);
   tickClock();
 
-  // parse a row's time and return end timestamp in ms (today)
   function parseEndTime(timeStr) {
     if (!timeStr) return null;
-    // Find the last time (end) in the string e.g. "8:00 am - 9:00 am" or "12:45 pm  - 13:45 pm"
-    // regex find all hh:mm with optional am/pm
     const regex = /(\d{1,2}:\d{2})\s*(am|pm|AM|PM)?/g;
     const matches = [...timeStr.matchAll(regex)];
     if (matches.length === 0) return null;
     const last = matches[matches.length - 1];
     let hhmm = last[1];
     let mer = last[2] ? last[2].toLowerCase() : null;
-
-    // If meridian missing but string's hour looks > 12 assume 24hr
     let parts = hhmm.split(':').map(s => parseInt(s,10));
     let hour = parts[0], minute = parts[1];
-
     if (!mer) {
-      // try detect from the first time's meridian
       const firstMer = matches[0][2] ? matches[0][2].toLowerCase() : null;
       if (firstMer) mer = firstMer;
     }
-
-    // convert to 24h hour
     if (mer) {
       if (mer === 'pm' && hour < 12) hour += 12;
       if (mer === 'am' && hour === 12) hour = 0;
     }
-
     const now = new Date();
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
     return end.getTime();
   }
 
-  // build today's rows for a chosen batch
   function buildTodayRows(rows) {
     const now = Date.now();
-    const dayName = new Date().toLocaleDateString(undefined, { weekday: 'long' }); // "Monday"
+    const dayName = new Date().toLocaleDateString(undefined, { weekday: 'long' });
     const result = [];
-
     rows.forEach((r, idx) => {
-      // r.time plus r[dayName] object with subject & room
       const cell = r[dayName] || { subject: "N/A", room: "N/A" };
       const endTs = parseEndTime(r.time);
-
-      // if unable to parse end time, skip scheduling bell for it but still show in timeline
       result.push({
         index: idx,
         time: r.time || 'N/A',
         subject: cell.subject || 'N/A',
         room: cell.room || 'N/A',
-        endTs: endTs // may be null
+        endTs: endTs
       });
     });
-
-    // sort by parsed end time where possible; keep original order for nulls
     result.sort((a,b) => {
       if (a.endTs && b.endTs) return a.endTs - b.endTs;
       if (a.endTs && !b.endTs) return -1;
       if (!a.endTs && b.endTs) return 1;
       return 0;
     });
-
     return result;
   }
 
-  // Render timeline table
   function renderTimeline(rows) {
     if (!rows || rows.length === 0) {
       timelineBody.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#6b7280">No timetable rows found</td></tr>';
@@ -419,9 +400,7 @@
     let html = '';
     rows.forEach((r, i) => {
       const cls = (r.endTs && now <= r.endTs && (i===0 || now < r.endTs && now >= (rows[i-1] && rows[i-1].endTs || -1))) ? 'current' : '';
-      // find next (first with endTs > now)
       const next = (r.endTs && r.endTs > now) && !rows.find(rr => rr.endTs && rr.endTs > now && rr.endTs < r.endTs) ? 'next' : '';
-      // better: mark current as row where now <= endTs and (prev.endTs < now or prev missing)
       html += `<tr class="${cls} ${next}">
         <td class="slot-time">${escapeHtml(r.time)}</td>
         <td><div class="subject">${escapeHtml(r.subject)}</div><div class="room">${escapeHtml(r.room)}</div></td>
@@ -431,12 +410,10 @@
     timelineBody.innerHTML = html;
   }
 
-  // escape helper
   function escapeHtml(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // find next bell (first endTs > now)
   function findNextBell(rows) {
     const now = Date.now();
     const candidates = rows.filter(r => r.endTs && r.endTs > now);
@@ -445,7 +422,6 @@
     return candidates[0];
   }
 
-  // bell sound using WebAudio (synth bell)
   function playBellSound() {
     if (!soundOn) return;
     try {
@@ -466,20 +442,17 @@
         o.stop(now + 2.0 + i*0.15);
       });
     } catch (e) {
-      // fallback beep
       const audio = new Audio();
-      audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA='; // tiny silent
+      audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
       audio.play().catch(()=>{});
     }
   }
 
-  // visual flash
   function flash() {
     flashEl.style.opacity = '1';
     setTimeout(()=> flashEl.style.opacity = '0', 300);
   }
 
-  // browser notification
   function notify(title, body) {
     if (!("Notification" in window)) return;
     if (Notification.permission === "granted") {
@@ -491,7 +464,6 @@
     }
   }
 
-  // main tick: check next bell and ring when time passes
   function checkAndRing() {
     if (!autoOn) return;
     const now = Date.now();
@@ -503,34 +475,25 @@
       renderTimeline(todayRows);
       return;
     }
-
-    // show next info
     const nextDate = new Date(next.endTs);
     const diffMs = next.endTs - now;
     nextLabel.textContent = timeStringFromMs(diffMs);
     nextSub.textContent = `${next.time} • ${next.subject} (${next.room})`;
     statusEl.textContent = 'Waiting';
-
     renderTimeline(todayRows);
-
-    // if we are at or past the next end time and not rung recently, ring
     if (now >= next.endTs - 500 && (now - lastRung) > (ringGuardSeconds * 1000)) {
       lastRung = now;
-      // ring
       statusEl.textContent = 'Ringing';
       playBellSound();
       flash();
       notify('Bell — Period ended', `${next.time} • ${next.subject} • ${batchSelect.value}`);
-      // after ring, update timeline & find subsequent bell
       setTimeout(() => {
         statusEl.textContent = 'Waiting';
-        // refresh todays rows in case edit.html saved new data
         loadTimetable(batchSelect.value);
       }, 1000);
     }
   }
 
-  // helper to format countdown
   function timeStringFromMs(ms) {
     if (ms <= 0) return "00:00:00";
     const s = Math.floor(ms/1000);
@@ -540,12 +503,10 @@
     return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
   }
 
-  // load timetable for given batch
   function loadTimetable(batchKey = 'Batch1') {
     timelineBody.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#6b7280">Loading timetable…</td></tr>';
     db.ref('timetables/' + batchKey).once('value').then(snap=>{
       if (!snap.exists()) {
-        // fallback - ask user to use edit page / show message
         timelineBody.innerHTML = '<tr><td colspan="6" style="padding:18px;text-align:center;color:#6b7280">Timetable not found in Firebase (save one from edit page)</td></tr>';
         scheduleRows = [];
         todayRows = [];
@@ -561,7 +522,6 @@
     });
   }
 
-  // UI wiring
   refreshBtn.addEventListener('click', ()=> loadTimetable(batchSelect.value));
   batchSelect.addEventListener('change', ()=> loadTimetable(batchSelect.value));
 
@@ -575,19 +535,16 @@
     soundToggle.classList.toggle('on', soundOn);
   });
 
-  // request notification permission early
   if (("Notification" in window) && Notification.permission !== "granted") {
     Notification.requestPermission().catch(()=>{});
   }
 
-  // initial load
   loadTimetable(batchSelect.value);
 
-  // periodic check every second
+  // ✅ Updated interval to sync day properly
   setInterval(()=> {
-    // recalc todayRows times in case day changed at midnight
+    todayRows = buildTodayRows(scheduleRows);
     checkAndRing();
-    // also update countdown label every second
   }, 1000);
 
 })();
