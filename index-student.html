@@ -4,121 +4,143 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Home</title>
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
     body {
       font-family: "Inter", sans-serif;
-      background: linear-gradient(135deg, #dbe8ff, #eef3ff, #ffffff);
+      background: linear-gradient(135deg, #cdd8ff, #e7ecff, #ffffff);
       margin: 0;
       padding: 0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      height: 100vh;
     }
 
-    h1 {
-      margin-top: 35px;
-      font-size: 32px;
+    /* HEADER */
+    .header {
+      padding: 28px 0 10px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 34px;
       font-weight: 600;
-      color: #1d1d1f;
+      color: #1e1e20;
+      margin: 0;
     }
 
-    .card {
-      margin-top: 30px;
+    .subtext {
+      font-size: 15px;
+      color: #5a5a5c;
+      margin-top: 5px;
+    }
+
+    /* MAIN GRID */
+    .grid {
+      margin-top: 40px;
       width: 90%;
-      max-width: 900px;
+      max-width: 1000px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 25px;
+    }
+
+    /* GLASS CARDS */
+    .card {
       background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(20px);
+      backdrop-filter: blur(18px);
       padding: 25px;
       border-radius: 18px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+      text-align: center;
+      transition: 0.25s ease;
     }
 
-    .section-title {
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.16);
+    }
+
+    .card i {
+      font-size: 38px;
+      color: #2a2a2c;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
       font-size: 20px;
       font-weight: 600;
-      margin-bottom: 12px;
-      color: #2d2d2f;
-    }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    li {
-      padding: 10px 14px;
-      background: rgba(255,255,255,0.4);
-      border-radius: 10px;
       margin-bottom: 8px;
-      font-size: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      color: #121212;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #444;
+      margin-bottom: 20px;
     }
 
     a.button {
-      margin-top: 20px;
       display: inline-block;
       padding: 12px 26px;
-      background: rgba(255,255,255,0.45);
+      background: #ffffff;
       border-radius: 10px;
       text-decoration: none;
       color: #1d1d1f;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 500;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      backdrop-filter: blur(20px);
       transition: 0.3s;
     }
 
     a.button:hover {
-      background: rgba(255,255,255,0.9);
+      background: #f1f1f1;
       transform: translateY(-2px);
     }
   </style>
 </head>
 <body>
-  <h1>Student Dashboard</h1>
 
-  <a href="view.html" class="button">View Timetable</a>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Student Dashboard</h1>
+    <div class="subtext">Access your timetable, announcements & recent academic updates</div>
+  </div>
 
-  <!-- NEW BUTTON FOR ANNOUNCEMENTS VIEW -->
-  <a href="announcements-view.html" class="button">View Announcements</a>
+  <!-- MAIN FEATURES GRID -->
+  <div class="grid">
+    
+    <!-- Timetable -->
+    <div class="card">
+      <i class="fa-solid fa-calendar-days"></i>
+      <div class="card-title">View Timetable</div>
+      <p>See your complete weekly class schedule.</p>
+      <a href="view.html" class="button">Open</a>
+    </div>
 
- <a href="recent.html" class="button">Recent Changes</a>
-  
+    <!-- Announcements -->
+    <div class="card">
+      <i class="fa-solid fa-bullhorn"></i>
+      <div class="card-title">Announcements</div>
+      <p>Stay updated with important notices from teachers.</p>
+      <a href="announcements-view.html" class="button">View</a>
+    </div>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="firebase-config.js"></script>
+    <!-- Recent Changes -->
+    <div class="card">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <div class="card-title">Recent Changes</div>
+      <p>Check the latest modifications made to the timetable.</p>
+      <a href="recent.html" class="button">See Updates</a>
+    </div>
 
-  <script>
-    const db = firebase.database();
+  </div>
 
-    function loadAnnouncements() {
-      db.ref("announcements").on("value", snap => {
-        const list = document.getElementById("announcements");
-        list.innerHTML = "";
-        snap.forEach(item => {
-          list.innerHTML += `<li>${item.val().msg}</li>`;
-        });
-      });
-    }
-
-    function loadChanges() {
-      db.ref("changes").limitToLast(10).on("value", snap => {
-        const list = document.getElementById("changes");
-        list.innerHTML = "";
-        snap.forEach(item => {
-          const v = item.val();
-          list.innerHTML += `<li>${v.action} — <i>${v.editor}</i></li>`;
-        });
-      });
-    }
-
-    loadAnnouncements();
-    loadChanges();
-  </script>
 </body>
 </html>
