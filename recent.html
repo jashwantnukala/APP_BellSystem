@@ -1,72 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Recent Changes</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #eef2f7;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-        }
+<meta charset="UTF-8">
+<title>Recent Changes</title>
 
-        .container {
-            max-width: 900px;
-            width: 95%;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 14px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-        }
+<style>
+    body {
+        font-family: "Inter", Arial, sans-serif;
+        background: #ffffff;
+        margin: 0;
+        padding: 40px 0;
+        display: flex;
+        justify-content: center;
+    }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            color: #222;
-        }
+    .container {
+        width: 92%;
+        max-width: 900px;
+        background: #fff;
+        padding: 30px;
+        border-radius: 14px;
+        border: 1px solid #000;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+    h2 {
+        text-align: center;
+        font-size: 32px;
+        margin-bottom: 20px;
+        font-weight: 700;
+        color: #000;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
-        th, td {
-            border-bottom: 1px solid #e0e0e0;
-            padding: 12px;
-            text-align: center;
-            font-size: 15px;
-        }
+    /* Table */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        border: 1px solid black;
+    }
 
-        
-        th {
-            background: #4a68ff;
-            color: white;
-            font-weight: 600;
-        }
+    th {
+        background: #000;
+        color: white;
+        font-weight: 600;
+        padding: 12px;
+        font-size: 14px;
+        border: 1px solid black;
+    }
 
-        tr:nth-child(even) {
-            background: #f7f9ff;
-        }
+    td {
+        padding: 12px;
+        border: 1px solid #000;
+        font-size: 14px;
+        text-align: center;
+        color: #111;
+    }
 
-        .timestamp {
-            font-size: 14px;
-            color: #444;
-        }
-    </style>
+    tr:nth-child(even) {
+        background: #f5f5f5;
+    }
+
+    .timestamp {
+        font-size: 13px;
+        color: #333;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+        font-size: 16px;
+    }
+</style>
+
 </head>
+
 <body>
 
 <div class="container">
     <h2>Recent Timetable Changes</h2>
 
-    <table id="changesTable">
+    <table>
         <thead>
             <tr>
                 <th>Date & Time</th>
@@ -78,10 +94,11 @@
             </tr>
         </thead>
         <tbody id="changesBody">
-            <tr><td colspan="6">Loading...</td></tr>
+            <tr><td colspan="6" class="loading">Loading...</td></tr>
         </tbody>
     </table>
 </div>
+
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -90,48 +107,48 @@
 <script src="firebase-config.js"></script>
 
 <script>
-function safe(val) {
-    return (val === undefined || val === null || val === "") ? "N/A" : val;
+/* SAFER VALUE CLEANER */
+function safe(x) {
+    return (x === undefined || x === null || x === "") ? "N/A" : x;
 }
 
+/* 🔥 LOAD ALL RECENT CHANGES */
 function loadRecentChanges() {
     const tbody = document.getElementById("changesBody");
-    tbody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+    tbody.innerHTML = `<tr><td colspan="6" class="loading">Loading...</td></tr>`;
 
     firebase.database().ref("recentChanges")
-        .orderByChild("timestamp")
-        .limitToLast(100)
-        .once("value", (snapshot) => {
+    .orderByChild("timestamp")
+    .limitToLast(120)
+    .once("value")
+    .then(snap => {
+        tbody.innerHTML = "";
 
-            tbody.innerHTML = "";
+        if (!snap.exists()) {
+            tbody.innerHTML = `<tr><td colspan="6">No recent changes found.</td></tr>`;
+            return;
+        }
 
-            if (!snapshot.exists()) {
-                tbody.innerHTML = "<tr><td colspan='6'>No updates found.</td></tr>";
-                return;
-            }
+        const entries = Object.values(snap.val()).reverse();
 
-            const entries = Object.values(snapshot.val()).reverse();
+        entries.forEach(item => {
+            const date = safe(item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A");
 
-            entries.forEach(item => {
-                const date = item.timestamp
-                    ? new Date(item.timestamp).toLocaleString()
-                    : "N/A";
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="timestamp">${safe(date)}</td>
-                        <td>${safe(item.teacher)}</td>
-                        <td>${safe(item.batch)}</td>
-                        <td>${safe(item.day)}</td>
-                        <td>${safe(item.period)}</td>
-                        <td>${safe(item.action)}</td>
-                    </tr>
-                `;
-            });
-        })
-        .catch(() => {
-            tbody.innerHTML = "<tr><td colspan='6'>Error loading data.</td></tr>";
+            tbody.innerHTML += `
+                <tr>
+                    <td class="timestamp">${date}</td>
+                    <td>${safe(item.teacher)}</td>
+                    <td>${safe(item.batch)}</td>
+                    <td>${safe(item.day)}</td>
+                    <td>${safe(item.period)}</td>
+                    <td>${safe(item.action)}</td>
+                </tr>
+            `;
         });
+    })
+    .catch(() => {
+        tbody.innerHTML = `<tr><td colspan="6">Error loading updates.</td></tr>`;
+    });
 }
 
 loadRecentChanges();
