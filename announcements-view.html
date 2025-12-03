@@ -89,16 +89,17 @@
         }
 
         const arr = [];
-        snap.forEach(s => arr.push(s.val()));
+        snap.forEach(s => arr.push(s.val())); // FIXED .val()
+
         arr.reverse();
 
         arr.forEach(a => {
           box.insertAdjacentHTML("beforeend", `
             <div class="ann">
-              <h3>${escapeHtml(a.title)}</h3>
-              <p>${escapeHtml(a.message)}</p>
+              <h3>${escapeHtml(a.title || "Untitled")}</h3>
+              <p>${escapeHtml(a.message || "")}</p>
               <div class="timestamp">
-                Posted by ${escapeHtml(a.postedBy)} • ${new Date(a.timestamp).toLocaleString()}
+                Posted by ${escapeHtml(a.postedBy || "Teacher")} • ${new Date(a.timestamp).toLocaleString()}
               </div>
             </div>
           `);
@@ -106,7 +107,8 @@
       });
 
     function escapeHtml(t) {
-      return String(t).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+      return String(t ?? "")
+        .replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
     }
   </script>
 
