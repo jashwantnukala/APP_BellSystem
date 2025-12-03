@@ -1,48 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Announcements — Student</title>
+
   <style>
-    /* Apple-style, minimal, rounded cards */
-    :root { --card-bg: rgba(255,255,255,0.55); --accent: #007aff; --muted:#666; }
+    :root { --card: rgba(255,255,255,0.55); --accent:#007aff; --muted:#666; }
+
     body {
-      margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
-      background: linear-gradient(135deg,#dbe8ff,#eef3ff); min-height:100vh;
-      display:flex; flex-direction:column; align-items:center; padding:36px 12px;
+      margin:0;
+      font-family:-apple-system,"Inter",sans-serif;
+      background:linear-gradient(135deg,#dbe8ff,#eef3ff,#ffffff);
+      padding:36px 12px;
+      display:flex; flex-direction:column; align-items:center;
     }
-    h1 { margin:0; font-size:28px; font-weight:600; display:flex; align-items:center; gap:10px; }
-    h1::before { content:"📢"; font-size:28px; }
-    .card { width:90%; max-width:900px; margin-top:28px; background:var(--card-bg);
-            backdrop-filter: blur(20px); border-radius:18px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.08);}
-    .ann { background:rgba(255,255,255,0.85); border-radius:12px; padding:14px; margin-bottom:12px;
-          box-shadow:0 6px 18px rgba(0,0,0,0.04); }
-    .ann h3 { margin:0 0 6px 0; font-size:17px; }
-    .ann p { margin:4px 0; color:#1d1d1f; font-size:15px; line-height:1.35; }
-    .timestamp { color:var(--muted); font-size:13px; margin-top:8px; }
-    a.home { margin-top:18px; color:var(--accent); text-decoration:none; font-weight:500; display:inline-block; }
-    .empty { color:var(--muted); padding:14px; text-align:center; }
+
+    h1 {
+      font-size:28px; font-weight:600;
+      display:flex; align-items:center; gap:10px;
+    }
+    h1::before { content:"📢"; font-size:29px; }
+
+    .card {
+      width:90%; max-width:900px;
+      background:var(--card);
+      backdrop-filter:blur(20px);
+      padding:20px;
+      border-radius:18px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.10);
+      margin-top:20px;
+    }
+
+    .ann {
+      background:white;
+      padding:16px;
+      border-radius:12px;
+      margin-bottom:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.05);
+    }
+
+    h3 { margin:0; font-size:17px; }
+    p { font-size:15px; margin:6px 0; }
+    .timestamp { color:var(--muted); font-size:13px; margin-top:5px; }
+
+    .empty { text-align:center; color:var(--muted); padding:20px; }
+
+    a.home { text-decoration:none; color:var(--accent); margin-top:20px; font-weight:500; }
   </style>
 </head>
+
 <body>
+
   <h1>Announcements</h1>
 
-  <div class="card" id="annCard">
-    <div id="annList" class="loading">
-      Loading announcements...
-    </div>
+  <div class="card">
+    <div id="annList">Loading…</div>
   </div>
 
-  <a class="home" href="index-student.html">← Back to Home</a>
+  <a href="index-student.html" class="home">← Back to Home</a>
 
-  <!-- Firebase v8 CDN -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    // --- Your Firebase config (uses your provided values) ---
     const firebaseConfig = {
       apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
       authDomain: "digitalbellplisworkthistime.firebaseapp.com",
@@ -50,48 +71,44 @@
       projectId: "digitalbellplisworkthistime",
       storageBucket: "digitalbellplisworkthistime.firebasestorage.app",
       messagingSenderId: "829189847707",
-      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e",
-      measurementId: "G-W0PYZY1R1M"
+      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
     };
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.database();
 
-    // Load announcements (newest first)
-    function loadAnnouncements() {
-      const container = document.getElementById('annList');
-      container.innerHTML = 'Loading announcements...';
-      db.ref('announcements').orderByChild('timestamp').once('value', snap => {
-        container.innerHTML = '';
+    db.ref("announcements")
+      .orderByChild("timestamp")
+      .on("value", snap => {
+        const box = document.getElementById("annList");
+        box.innerHTML = "";
+
         if (!snap.exists()) {
-          container.innerHTML = '<div class="empty">No announcements yet.</div>';
+          box.innerHTML = `<div class="empty">No announcements yet.</div>`;
           return;
         }
-        // snapshot -> array of entries newest first
-        const entries = [];
-        snap.forEach(s => entries.push({ id: s.key, ...s.val() }));
-        entries.reverse(); // newest first
-        entries.forEach(e => {
-          const d = new Date(e.timestamp || Date.now()).toLocaleString();
-          const html = `
+
+        const arr = [];
+        snap.forEach(s => arr.push(s.val()));
+        arr.reverse();
+
+        arr.forEach(a => {
+          box.insertAdjacentHTML("beforeend", `
             <div class="ann">
-              <h3>${escapeHtml(e.title || 'Untitled')}</h3>
-              <p>${escapeHtml(e.message || '')}</p>
-              <div class="timestamp">Posted by ${escapeHtml(e.postedBy || 'Teacher')} • ${d}</div>
-            </div>`;
-          container.insertAdjacentHTML('beforeend', html);
+              <h3>${escapeHtml(a.title)}</h3>
+              <p>${escapeHtml(a.message)}</p>
+              <div class="timestamp">
+                Posted by ${escapeHtml(a.postedBy)} • ${new Date(a.timestamp).toLocaleString()}
+              </div>
+            </div>
+          `);
         });
       });
+
+    function escapeHtml(t) {
+      return String(t).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
     }
-
-    // defensive simple html escape
-    function escapeHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    loadAnnouncements();
-
-    // realtime update subscription (optional live updates)
-    db.ref('announcements').orderByChild('timestamp').on('value', () => loadAnnouncements());
   </script>
+
 </body>
 </html>
