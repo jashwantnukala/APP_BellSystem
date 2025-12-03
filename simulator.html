@@ -121,7 +121,7 @@
   <div class="timeline">
     <table aria-label="Today's timetable">
       <thead>
-        <tr><th>Time</th><th>Today (subject • room)</th><th></th><th></th><th></th><th></th></tr>
+        <tr><th>Time</th><th>Today's Timetable (subject • room)</th><th></th><th></th><th></th><th></th></tr>
       </thead>
       <tbody id="timelineBody">
         <tr><td colspan="6" style="padding:18px;text-align:center;color:#6b7280">Loading timetable…</td></tr>
@@ -293,20 +293,10 @@
       });
     } catch(e) {
       // fallback: use silent audio data URI to avoid exceptions
-      // --- Realistic Bell Sound --- 
-const bellAudio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-classic-short-bell-1047.mp3");
-bellAudio.volume = 0.9; // adjust volume here (0.0 - 1.0)
-
-function playBellSound() {
-  if (!soundOn) return;
-
-  try {
-    bellAudio.currentTime = 0;   // rewind for repeated rings
-    bellAudio.play().catch(() => {});
-  } catch(e) {
-    console.warn("Audio playback blocked:", e);
+      const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=');
+      audio.play().catch(()=>{});
+    }
   }
-}
 
   // visual flash & vibration
   function flashOnce() {
