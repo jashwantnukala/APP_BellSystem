@@ -130,8 +130,8 @@
   </div>
 
   <footer>
-    <div class="small">Bell tone: synthesized•</div>
-    <div class="small">Tip: press "Enable Sound & Notifications" once to allow audio on mobile/desktop</div>
+    <div class="small">Bell tone: synthesized</div>
+    <div class="small">Pro Tip: press "Enable Sound & Notifications" once to allow audio on mobile/desktop</div>
   </footer>
 </div>
 
@@ -293,10 +293,20 @@
       });
     } catch(e) {
       // fallback: use silent audio data URI to avoid exceptions
-      const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=');
-      audio.play().catch(()=>{});
-    }
+      // --- Realistic Bell Sound --- 
+const bellAudio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-classic-short-bell-1047.mp3");
+bellAudio.volume = 0.9; // adjust volume here (0.0 - 1.0)
+
+function playBellSound() {
+  if (!soundOn) return;
+
+  try {
+    bellAudio.currentTime = 0;   // rewind for repeated rings
+    bellAudio.play().catch(() => {});
+  } catch(e) {
+    console.warn("Audio playback blocked:", e);
   }
+}
 
   // visual flash & vibration
   function flashOnce() {
