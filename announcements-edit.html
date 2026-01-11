@@ -25,7 +25,6 @@
       color: var(--text);
     }
 
-    /* TOP BAR */
     header {
       background:white;
       border-bottom:1px solid var(--border);
@@ -51,7 +50,6 @@
       cursor:pointer;
     }
 
-    /* LAYOUT */
     main {
       max-width:1100px;
       margin:32px auto;
@@ -61,7 +59,6 @@
       gap:28px;
     }
 
-    /* CARDS */
     .card {
       background:var(--card);
       border-radius:18px;
@@ -74,7 +71,6 @@
       font-size:18px;
     }
 
-    /* FORM */
     input, textarea {
       width:100%;
       padding:12px 14px;
@@ -85,11 +81,6 @@
     }
 
     textarea { resize:vertical; min-height:110px; }
-
-    input:focus, textarea:focus {
-      outline:none;
-      border-color:var(--accent);
-    }
 
     .primary {
       background:var(--accent);
@@ -102,7 +93,6 @@
       cursor:pointer;
     }
 
-    /* ANNOUNCEMENTS */
     #annList { display:flex; flex-direction:column; gap:16px; }
 
     .ann {
@@ -112,17 +102,6 @@
       display:grid;
       grid-template-columns: 1fr auto;
       gap:14px;
-    }
-
-    .ann h3 {
-      margin:0 0 6px;
-      font-size:16px;
-    }
-
-    .ann p {
-      margin:0;
-      font-size:15px;
-      color:#374151;
     }
 
     .meta {
@@ -163,8 +142,6 @@
 </header>
 
 <main>
-
-  <!-- POST PANEL -->
   <section class="card">
     <h2>Post Announcement</h2>
     <input id="title" placeholder="Announcement title">
@@ -172,12 +149,10 @@
     <button class="primary" id="postBtn">Publish</button>
   </section>
 
-  <!-- LIST PANEL -->
   <section class="card">
     <h2>All Announcements</h2>
     <div id="annList">Loading…</div>
   </section>
-
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -202,59 +177,59 @@
   const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
 
   auth.onAuthStateChanged(user => {
-    if (!user || user.uid !== adminUID) location.href = "index.html";
+    if (!user || user.uid !== adminUID) {
+      location.href = "index.html";
+      return;
+    }
+
+    // ✅ READ ANNOUNCEMENTS ONLY AFTER AUTH IS READY
+    db.ref("announcements")
+      .orderByChild("timestamp")
+      .on("value", snap => {
+        annList.innerHTML = "";
+
+        if (!snap.exists()) {
+          annList.innerHTML = `<div style="color:#6b7280">No announcements yet.</div>`;
+          return;
+        }
+
+        const arr = [];
+        snap.forEach(s => arr.push({ id:s.key, ...s.val() }));
+        arr.reverse();
+
+        arr.forEach(a => {
+          annList.insertAdjacentHTML("beforeend", `
+            <div class="ann">
+              <div>
+                <h3>${escapeHtml(a.title)}</h3>
+                <p>${escapeHtml(a.message)}</p>
+                <div class="meta">
+                  ${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}
+                </div>
+              </div>
+              <div class="actions">
+                <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
+                <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
+              </div>
+            </div>
+          `);
+        });
+      });
   });
 
   signOutBtn.onclick = () =>
     auth.signOut().then(() => location.href="index.html");
 
   postBtn.onclick = () => {
-    const t = title.value.trim();
-    const m = message.value.trim();
-    if (!t || !m) return alert("Fill all fields");
-
+    if (!title.value || !message.value) return alert("Fill all fields");
     db.ref("announcements").push({
-      title:t,
-      message:m,
+      title:title.value.trim(),
+      message:message.value.trim(),
       timestamp:Date.now(),
       postedBy:auth.currentUser.email
     });
-
-    title.value="";
-    message.value="";
+    title.value=""; message.value="";
   };
-
-  db.ref("announcements").orderByChild("timestamp").on("value", snap => {
-    const box = annList;
-    box.innerHTML = "";
-
-    if (!snap.exists()) {
-      box.innerHTML = `<div style="color:#6b7280">No announcements yet.</div>`;
-      return;
-    }
-
-    const arr=[];
-    snap.forEach(s => arr.push({id:s.key,...s.val()}));
-    arr.reverse();
-
-    arr.forEach(a => {
-      box.insertAdjacentHTML("beforeend", `
-        <div class="ann">
-          <div>
-            <h3>${escapeHtml(a.title)}</h3>
-            <p>${escapeHtml(a.message)}</p>
-            <div class="meta">
-              ${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}
-            </div>
-          </div>
-          <div class="actions">
-            <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
-            <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
-          </div>
-        </div>
-      `);
-    });
-  });
 
   function editAnn(id) {
     db.ref("announcements/"+id).once("value").then(s => {
