@@ -13,17 +13,23 @@
       font-family:-apple-system,"Inter",sans-serif;
       background:linear-gradient(135deg,#dbe8ff,#eef3ff,#ffffff);
       padding:36px 12px;
-      display:flex; flex-direction:column; align-items:center;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
     }
 
     h1 {
-      font-size:28px; font-weight:600;
-      display:flex; align-items:center; gap:10px;
+      font-size:28px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
     h1::before { content:"📢"; font-size:29px; }
 
     .card {
-      width:90%; max-width:900px;
+      width:90%;
+      max-width:900px;
       background:var(--card);
       backdrop-filter:blur(20px);
       padding:20px;
@@ -44,9 +50,18 @@
     p { font-size:15px; margin:6px 0; }
     .timestamp { color:var(--muted); font-size:13px; margin-top:5px; }
 
-    .empty { text-align:center; color:var(--muted); padding:20px; }
+    .empty {
+      text-align:center;
+      color:var(--muted);
+      padding:20px;
+    }
 
-    a.home { text-decoration:none; color:var(--accent); margin-top:20px; font-weight:500; }
+    a.home {
+      text-decoration:none;
+      color:var(--accent);
+      margin-top:20px;
+      font-weight:500;
+    }
   </style>
 </head>
 
@@ -60,6 +75,7 @@
 
   <a href="index-student.html" class="home">← Back to Home</a>
 
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -69,46 +85,60 @@
       authDomain: "digitalbellplisworkthistime.firebaseapp.com",
       databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
       projectId: "digitalbellplisworkthistime",
-      storageBucket: "digitalbellplisworkthistime.firebasestorage.app",
+      storageBucket: "digitalbellplisworkthistime.appspot.com",
       messagingSenderId: "829189847707",
       appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
     };
-    firebase.initializeApp(firebaseConfig);
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
 
     const db = firebase.database();
+    const annList = document.getElementById("annList");
 
     db.ref("announcements")
       .orderByChild("timestamp")
       .on("value", snap => {
-        const box = document.getElementById("annList");
-        box.innerHTML = "";
+        annList.innerHTML = "";
 
         if (!snap.exists()) {
-          box.innerHTML = `<div class="empty">No announcements yet.</div>`;
+          annList.innerHTML = `<div class="empty">No announcements yet.</div>`;
           return;
         }
 
-        const arr = [];
-        snap.forEach(s => arr.push(s.val())); // FIXED .val()
+        const announcements = [];
+        snap.forEach(child => {
+          announcements.push(child.val());
+        });
 
-        arr.reverse();
+        announcements.reverse();
 
-        arr.forEach(a => {
-          box.insertAdjacentHTML("beforeend", `
+        announcements.forEach(a => {
+          annList.insertAdjacentHTML("beforeend", `
             <div class="ann">
               <h3>${escapeHtml(a.title || "Untitled")}</h3>
               <p>${escapeHtml(a.message || "")}</p>
               <div class="timestamp">
-                Posted by ${escapeHtml(a.postedBy || "Teacher")} • ${new Date(a.timestamp).toLocaleString()}
+                Posted by ${escapeHtml(a.postedBy || "Teacher")} • 
+                ${a.timestamp ? new Date(a.timestamp).toLocaleString() : ""}
               </div>
             </div>
           `);
         });
+      }, err => {
+        console.error("Firebase read failed:", err);
+        annList.innerHTML =
+          `<div class="empty">Unable to load announcements.</div>`;
       });
 
     function escapeHtml(t) {
       return String(t ?? "")
-        .replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+        .replace(/[&<>]/g, c => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;"
+        }[c]));
     }
   </script>
 
