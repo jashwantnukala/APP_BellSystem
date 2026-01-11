@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Teacher Dashboard — Announcements</title>
+  <title>Teacher Announcements Dashboard</title>
 
   <style>
     :root {
@@ -16,13 +16,13 @@
       --border:#e5e7eb;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing:border-box; }
 
     body {
       margin:0;
-      font-family: "Inter", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family:"Inter", system-ui, sans-serif;
+      background:var(--bg);
+      color:var(--text);
     }
 
     header {
@@ -55,7 +55,7 @@
       margin:32px auto;
       padding:0 20px;
       display:grid;
-      grid-template-columns: 380px 1fr;
+      grid-template-columns:380px 1fr;
       gap:28px;
     }
 
@@ -100,7 +100,7 @@
       border-radius:16px;
       padding:16px;
       display:grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns:1fr auto;
       gap:14px;
     }
 
@@ -144,7 +144,7 @@
 <main>
   <section class="card">
     <h2>Post Announcement</h2>
-    <input id="title" placeholder="Announcement title">
+    <input id="title" placeholder="Announcement title"/>
     <textarea id="message" placeholder="Write announcement message..."></textarea>
     <button class="primary" id="postBtn">Publish</button>
   </section>
@@ -159,25 +159,20 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<!-- Your firebase-config.js -->
+<script src="firebase-config.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey:"AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-    authDomain:"digitalbellplisworkthistime.firebaseapp.com",
-    databaseURL:"https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-    projectId:"digitalbellplisworkthistime",
-    storageBucket:"digitalbellplisworkthistime.appspot.com",
-    messagingSenderId:"829189847707",
-    appId:"1:829189847707:web:99b13d5fe551b54d9ce43e"
-  };
-
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
   const db = firebase.database();
   const auth = firebase.auth();
   const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
 
-  // Auth listener + load announcements after confirmed
+  // Sign out button
+  document.getElementById("signOutBtn").onclick = () => {
+    auth.signOut().then(() => location.href="index.html");
+  };
+
+  // Auth listener
   auth.onAuthStateChanged(user => {
     if (!user) return; // wait for auth
 
@@ -186,37 +181,41 @@
       return;
     }
 
+    // Load announcements after auth confirmed
     loadAnnouncements();
   });
 
-  signOutBtn.onclick = () => auth.signOut().then(()=>location.href="index.html");
-
-  postBtn.onclick = () => {
-    if(!title.value || !message.value) return alert("Fill all fields");
+  // Post announcement
+  document.getElementById("postBtn").onclick = () => {
+    const title = document.getElementById("title").value.trim();
+    const message = document.getElementById("message").value.trim();
+    if(!title || !message) return alert("Fill all fields");
 
     db.ref("announcements").push({
-      title: title.value.trim(),
-      message: message.value.trim(),
+      title,
+      message,
       timestamp: Date.now(),
       postedBy: auth.currentUser.email
     });
 
-    title.value=""; message.value="";
+    document.getElementById("title").value="";
+    document.getElementById("message").value="";
   };
 
+  // Load announcements
   function loadAnnouncements() {
+    const annList = document.getElementById("annList");
     db.ref("announcements")
       .orderByChild("timestamp")
       .on("value", snap => {
         annList.innerHTML = "";
-
-        if (!snap.exists()) {
-          annList.innerHTML = `<div style="color:#6b7280">No announcements yet.</div>`;
+        if(!snap.exists()){
+          annList.innerHTML=`<div style="color:#6b7280">No announcements yet.</div>`;
           return;
         }
 
         const arr = [];
-        snap.forEach(s => arr.push({ id:s.key, ...s.val() }));
+        snap.forEach(s => arr.push({id:s.key, ...s.val()}));
         arr.reverse();
 
         arr.forEach(a => {
