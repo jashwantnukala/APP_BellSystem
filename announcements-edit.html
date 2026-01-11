@@ -1,102 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Manage Announcements — Teacher</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Teacher Dashboard — Announcements</title>
 
   <style>
     :root {
-      --accent: #2d66ff;
-      --danger: #ff3b30;
-      --card: rgba(255,255,255,0.65);
-      --blur: blur(22px);
-      --muted: #6b7280;
-      --text-dark: #1f2937;
+      --accent:#4f46e5;
+      --danger:#dc2626;
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --text:#111827;
+      --border:#e5e7eb;
     }
+
+    * { box-sizing: border-box; }
+
     body {
-      margin: 0;
-      font-family: "Inter", sans-serif;
-      background: linear-gradient(135deg, #dce7ff, #eef3ff, #ffffff);
-      padding: 40px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: var(--text-dark);
+      margin:0;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
     }
-    .nav {
-      width: 95%;
-      max-width: 950px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+
+    /* TOP BAR */
+    header {
+      background:white;
+      border-bottom:1px solid var(--border);
+      padding:18px 28px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     }
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 18px;
-      font-weight: 600;
+
+    header h1 {
+      margin:0;
+      font-size:22px;
+      font-weight:700;
     }
-    #signOutBtn {
-      background: var(--danger);
-      color: white;
+
+    header button {
+      background:var(--danger);
+      color:white;
+      border:none;
+      border-radius:10px;
+      padding:10px 16px;
+      font-weight:600;
+      cursor:pointer;
     }
+
+    /* LAYOUT */
+    main {
+      max-width:1100px;
+      margin:32px auto;
+      padding:0 20px;
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:28px;
+    }
+
+    /* CARDS */
     .card {
-      width: 95%;
-      max-width: 950px;
-      background: var(--card);
-      backdrop-filter: var(--blur);
-      border-radius: 20px;
-      padding: 25px;
-      margin-top: 25px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.05);
+      padding:22px;
     }
+
+    .card h2 {
+      margin:0 0 14px;
+      font-size:18px;
+    }
+
+    /* FORM */
+    input, textarea {
+      width:100%;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font-size:15px;
+      margin-bottom:12px;
+    }
+
+    textarea { resize:vertical; min-height:110px; }
+
+    input:focus, textarea:focus {
+      outline:none;
+      border-color:var(--accent);
+    }
+
+    .primary {
+      background:var(--accent);
+      color:white;
+      border:none;
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    /* ANNOUNCEMENTS */
+    #annList { display:flex; flex-direction:column; gap:16px; }
+
     .ann {
-      background: white;
-      padding: 18px;
-      border-radius: 14px;
-      margin-bottom: 15px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      border-left: 5px solid var(--accent);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:14px;
     }
+
+    .ann h3 {
+      margin:0 0 6px;
+      font-size:16px;
+    }
+
+    .ann p {
+      margin:0;
+      font-size:15px;
+      color:#374151;
+    }
+
     .meta {
-      font-size: 13px;
-      margin-top: 4px;
-      color: var(--muted);
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
     }
+
+    .actions {
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
     .small-btn {
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 14px;
-      cursor: pointer;
+      border:none;
+      border-radius:10px;
+      padding:8px 12px;
+      font-size:13px;
+      cursor:pointer;
+      font-weight:600;
     }
-    .edit { background: #fff7c2; }
-    .delete { background: #ffd1d1; }
+
+    .edit { background:#fef3c7; }
+    .delete { background:#fee2e2; }
+
+    @media (max-width:900px) {
+      main { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 
 <body>
 
-<div class="nav">
-  <h1>📣 Manage Announcements</h1>
+<header>
+  <h1>📣 Teacher Announcements</h1>
   <button id="signOutBtn">Sign Out</button>
-</div>
+</header>
 
-<div class="card">
-  <h2>Post New Announcement</h2>
-  <input id="title" placeholder="Title">
-  <textarea id="message" placeholder="Write message..."></textarea>
-  <button class="primary" id="postBtn">Post Announcement</button>
-</div>
+<main>
 
-<div class="card">
-  <h2>All Announcements</h2>
-  <div id="annList">Loading...</div>
-</div>
+  <!-- POST PANEL -->
+  <section class="card">
+    <h2>Post Announcement</h2>
+    <input id="title" placeholder="Announcement title">
+    <textarea id="message" placeholder="Write announcement message..."></textarea>
+    <button class="primary" id="postBtn">Publish</button>
+  </section>
+
+  <!-- LIST PANEL -->
+  <section class="card">
+    <h2>All Announcements</h2>
+    <div id="annList">Loading…</div>
+  </section>
+
+</main>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -113,9 +195,7 @@
     appId:"1:829189847707:web:99b13d5fe551b54d9ce43e"
   };
 
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
   const db = firebase.database();
   const auth = firebase.auth();
@@ -125,77 +205,76 @@
     if (!user || user.uid !== adminUID) location.href = "index.html";
   });
 
-  document.getElementById("postBtn").onclick = () => {
+  signOutBtn.onclick = () =>
+    auth.signOut().then(() => location.href="index.html");
+
+  postBtn.onclick = () => {
     const t = title.value.trim();
     const m = message.value.trim();
     if (!t || !m) return alert("Fill all fields");
+
     db.ref("announcements").push({
-      title: t,
-      message: m,
-      timestamp: Date.now(),
-      postedBy: auth.currentUser.email
+      title:t,
+      message:m,
+      timestamp:Date.now(),
+      postedBy:auth.currentUser.email
     });
-    title.value = "";
-    message.value = "";
+
+    title.value="";
+    message.value="";
   };
 
-  db.ref("announcements")
-    .orderByChild("timestamp")
-    .on("value", snap => {
-      const box = document.getElementById("annList");
-      box.innerHTML = "";
+  db.ref("announcements").orderByChild("timestamp").on("value", snap => {
+    const box = annList;
+    box.innerHTML = "";
 
-      if (!snap.exists()) {
-        box.innerHTML = `<div style="color:#666">No announcements.</div>`;
-        return;
-      }
+    if (!snap.exists()) {
+      box.innerHTML = `<div style="color:#6b7280">No announcements yet.</div>`;
+      return;
+    }
 
-      const arr = [];
-      snap.forEach(s => arr.push({ id: s.key, ...s.val() }));
-      arr.reverse();
+    const arr=[];
+    snap.forEach(s => arr.push({id:s.key,...s.val()}));
+    arr.reverse();
 
-      arr.forEach(a => {
-        box.insertAdjacentHTML("beforeend", `
-          <div class="ann">
-            <div>
-              <h3>${escapeHtml(a.title)}</h3>
-              <p>${escapeHtml(a.message)}</p>
-              <div class="meta">
-                Posted by ${escapeHtml(a.postedBy)} ·
-                ${new Date(a.timestamp).toLocaleString()}
-              </div>
-            </div>
-            <div>
-              <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
-              <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
+    arr.forEach(a => {
+      box.insertAdjacentHTML("beforeend", `
+        <div class="ann">
+          <div>
+            <h3>${escapeHtml(a.title)}</h3>
+            <p>${escapeHtml(a.message)}</p>
+            <div class="meta">
+              ${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}
             </div>
           </div>
-        `);
-      });
+          <div class="actions">
+            <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
+            <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
+          </div>
+        </div>
+      `);
     });
+  });
 
   function editAnn(id) {
     db.ref("announcements/"+id).once("value").then(s => {
-      const v = s.val();
-      const nt = prompt("Edit title:", v.title);
-      if (nt === null) return;
-      const nm = prompt("Edit message:", v.message);
-      if (nm === null) return;
-      db.ref("announcements/"+id).update({ title: nt, message: nm });
+      const v=s.val();
+      const nt=prompt("Edit title:",v.title);
+      if(nt===null) return;
+      const nm=prompt("Edit message:",v.message);
+      if(nm===null) return;
+      db.ref("announcements/"+id).update({title:nt,message:nm});
     });
   }
 
   function delAnn(id) {
-    if (confirm("Delete this announcement?")) {
+    if(confirm("Delete this announcement?"))
       db.ref("announcements/"+id).remove();
-    }
   }
 
   function escapeHtml(t) {
-    return String(t ?? "").replace(/[&<>]/g, c => ({
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;"
+    return String(t??"").replace(/[&<>]/g,c=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;"
     }[c]));
   }
 </script>
