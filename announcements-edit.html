@@ -1,301 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Teacher Dashboard — Announcements</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Announcements — Student</title>
 
   <style>
-    :root {
-      --accent:#4f46e5;
-      --danger:#dc2626;
-      --bg:#f4f6fb;
-      --card:#ffffff;
-      --muted:#6b7280;
-      --text:#111827;
-      --border:#e5e7eb;
-    }
-
-    * { box-sizing: border-box; }
-
     body {
-      margin:0;
-      font-family: "Inter", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      margin: 0;
+      font-family: system-ui, -apple-system, Inter, sans-serif;
+      background: #eef3ff;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    header {
-      background:white;
-      border-bottom:1px solid var(--border);
-      padding:18px 28px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-
-    header h1 {
-      margin:0;
-      font-size:22px;
-      font-weight:700;
-    }
-
-    header button {
-      background:var(--danger);
-      color:white;
-      border:none;
-      border-radius:10px;
-      padding:10px 16px;
-      font-weight:600;
-      cursor:pointer;
-    }
-
-    main {
-      max-width:1100px;
-      margin:32px auto;
-      padding:0 20px;
-      display:grid;
-      grid-template-columns: 380px 1fr;
-      gap:28px;
+    h1 {
+      font-size: 26px;
+      margin-bottom: 18px;
     }
 
     .card {
-      background:var(--card);
-      border-radius:18px;
-      box-shadow:0 10px 25px rgba(0,0,0,0.05);
-      padding:22px;
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
-
-    .card h2 {
-      margin:0 0 14px;
-      font-size:18px;
-    }
-
-    input, textarea {
-      width:100%;
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      font-size:15px;
-      margin-bottom:12px;
-    }
-
-    textarea { resize:vertical; min-height:110px; }
-
-    .primary {
-      background:var(--accent);
-      color:white;
-      border:none;
-      width:100%;
-      padding:12px;
-      border-radius:12px;
-      font-weight:600;
-      cursor:pointer;
-    }
-
-    #annList { display:flex; flex-direction:column; gap:16px; }
 
     .ann {
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:16px;
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap:14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
     }
 
-    .meta {
-      margin-top:8px;
-      font-size:12px;
-      color:var(--muted);
+    .ann h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
     }
 
-    .actions {
-      display:flex;
-      flex-direction:column;
-      gap:8px;
+    .ann p {
+      margin: 0 0 6px;
+      font-size: 15px;
     }
 
-    .small-btn {
-      border:none;
-      border-radius:10px;
-      padding:8px 12px;
-      font-size:13px;
-      cursor:pointer;
-      font-weight:600;
+    .time {
+      font-size: 13px;
+      color: #6b7280;
     }
 
-    .edit { background:#fef3c7; }
-    .delete { background:#fee2e2; }
-
-    @media (max-width:900px) {
-      main { grid-template-columns:1fr; }
+    .empty {
+      color: #6b7280;
+      text-align: center;
+      padding: 18px;
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <h1>📣 Teacher Announcements</h1>
-  <button id="signOutBtn">Sign Out</button>
-</header>
+  <h1>📢 Announcements</h1>
 
-<main>
-  <section class="card">
-    <h2>Post Announcement</h2>
-    <input id="title" placeholder="Announcement title">
-    <textarea id="message" placeholder="Write announcement message..."></textarea>
-    <button class="primary" id="postBtn">Publish</button>
-  </section>
+  <div class="card" id="annList">Loading…</div>
 
-  <section class="card">
-    <h2>All Announcements</h2>
-    <div id="annList">Loading…</div>
-  </section>
-</main>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
+      authDomain: "digitalbellplisworkthistime.firebaseapp.com",
+      databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
+      projectId: "digitalbellplisworkthistime",
+      storageBucket: "digitalbellplisworkthistime.appspot.com",
+      messagingSenderId: "829189847707",
+      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
+    };
 
-<script>
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-    authDomain: "digitalbellplisworkthistime.firebaseapp.com",
-    databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-    projectId: "digitalbellplisworkthistime",
-    storageBucket: "digitalbellplisworkthistime.appspot.com",
-    messagingSenderId: "829189847707",
-    appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
-  };
-
-  // Safe initialization (prevents double-init crash)
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-
-  const db = firebase.database();
-  const auth = firebase.auth();
-
-  const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
-
-  // Auth guard + controlled DB loading
-  auth.onAuthStateChanged(user => {
-    if (!user) return; // wait until auth resolves
-
-    if (user.uid !== adminUID) {
-      location.href = "index.html";
-      return;
+    // Safe Firebase initialization (prevents double-init failure)
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
     }
 
-    loadAnnouncements();
-  });
-
-  document.getElementById("signOutBtn").onclick = () => {
-    auth.signOut().then(() => location.href = "index.html");
-  };
-
-  function showToast() {
-    const t = document.getElementById("successToast");
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2000);
-  }
-
-  document.getElementById("postBtn").onclick = () => {
-    const title = document.getElementById("title").value.trim();
-    const message = document.getElementById("message").value.trim();
-
-    if (!title || !message) {
-      alert("Fill all fields");
-      return;
-    }
-
-    db.ref("announcements").push({
-      title,
-      message,
-      timestamp: Date.now(),
-      postedBy: auth.currentUser.email
-    });
-
-    document.getElementById("title").value = "";
-    document.getElementById("message").value = "";
-    showToast();
-  };
-
-  function loadAnnouncements() {
+    const db = firebase.database();
     const box = document.getElementById("annList");
 
+    // Load announcements
     db.ref("announcements")
       .orderByChild("timestamp")
       .on("value", snap => {
         box.innerHTML = "";
 
         if (!snap.exists()) {
-          box.innerHTML = "<div style='color:#666'>No announcements.</div>";
+          box.innerHTML = `<div class="empty">No announcements available.</div>`;
           return;
         }
 
-        const list = [];
-        snap.forEach(s => list.push({ id: s.key, ...s.val() }));
-        list.reverse();
+        const items = [];
+        snap.forEach(child => {
+          const v = child.val() || {};
+          items.push({
+            title: v.title || "Untitled",
+            message: v.message || "",
+            postedBy: v.postedBy || "Teacher",
+            timestamp: v.timestamp || 0
+          });
+        });
 
-        list.forEach(a => {
+        items.reverse();
+
+        items.forEach(a => {
+          const timeText = a.timestamp
+            ? new Date(a.timestamp).toLocaleString()
+            : "Time not available";
+
           box.insertAdjacentHTML("beforeend", `
             <div class="ann">
-              <div>
-                <h3>${escapeHtml(a.title)}</h3>
-                <p>${escapeHtml(a.message)}</p>
-                <div class="meta">
-                  Posted by ${escapeHtml(a.postedBy)} ·
-                  ${new Date(a.timestamp).toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
-                <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
+              <h3>${escapeHtml(a.title)}</h3>
+              <p>${escapeHtml(a.message)}</p>
+              <div class="time">
+                Posted by ${escapeHtml(a.postedBy)} • ${timeText}
               </div>
             </div>
           `);
         });
       });
-  }
 
-  function editAnn(id) {
-    db.ref("announcements/" + id).once("value").then(snap => {
-      const data = snap.val();
-      if (!data) return;
-
-      const nt = prompt("Edit title:", data.title);
-      if (nt === null) return;
-
-      const nm = prompt("Edit message:", data.message);
-      if (nm === null) return;
-
-      db.ref("announcements/" + id).update({
-        title: nt,
-        message: nm,
-        editedAt: Date.now()
-      });
-    });
-  }
-
-  function delAnn(id) {
-    if (confirm("Delete this announcement?")) {
-      db.ref("announcements/" + id).remove();
+    function escapeHtml(t) {
+      return String(t ?? "").replace(/[&<>]/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;"
+      }[c]));
     }
-  }
-
-  function escapeHtml(t) {
-    return String(t ?? "").replace(/[&<>]/g, c => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;"
-    }[c]));
-  }
-</script>
-
+  </script>
 
 </body>
 </html>
