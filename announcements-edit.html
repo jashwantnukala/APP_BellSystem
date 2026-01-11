@@ -160,54 +160,99 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
+  // Firebase config
   const firebaseConfig = {
-    apiKey:"AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-    authDomain:"digitalbellplisworkthistime.firebaseapp.com",
-    databaseURL:"https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-    projectId:"digitalbellplisworkthistime",
-    storageBucket:"digitalbellplisworkthistime.firebasestorage.app",
-    messagingSenderId:"829189847707",
-    appId:"1:829189847707:web:99b13d5fe551b54d9ce43e"
+    apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
+    authDomain: "digitalbellplisworkthistime.firebaseapp.com",
+    databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
+    projectId: "digitalbellplisworkthistime",
+    storageBucket: "digitalbellplisworkthistime.appspot.com",
+    messagingSenderId: "829189847707",
+    appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
   };
 
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  // Safe initialization (prevents double-init crash)
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
 
   const db = firebase.database();
   const auth = firebase.auth();
+
   const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
 
+  // Auth guard + controlled DB loading
   auth.onAuthStateChanged(user => {
-    if (!user || user.uid !== adminUID) {
+    if (!user) return; // wait until auth resolves
+
+    if (user.uid !== adminUID) {
       location.href = "index.html";
       return;
     }
 
-    // ✅ READ ANNOUNCEMENTS ONLY AFTER AUTH IS READY
+    loadAnnouncements();
+  });
+
+  document.getElementById("signOutBtn").onclick = () => {
+    auth.signOut().then(() => location.href = "index.html");
+  };
+
+  function showToast() {
+    const t = document.getElementById("successToast");
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  }
+
+  document.getElementById("postBtn").onclick = () => {
+    const title = document.getElementById("title").value.trim();
+    const message = document.getElementById("message").value.trim();
+
+    if (!title || !message) {
+      alert("Fill all fields");
+      return;
+    }
+
+    db.ref("announcements").push({
+      title,
+      message,
+      timestamp: Date.now(),
+      postedBy: auth.currentUser.email
+    });
+
+    document.getElementById("title").value = "";
+    document.getElementById("message").value = "";
+    showToast();
+  };
+
+  function loadAnnouncements() {
+    const box = document.getElementById("annList");
+
     db.ref("announcements")
       .orderByChild("timestamp")
       .on("value", snap => {
-        annList.innerHTML = "";
+        box.innerHTML = "";
 
         if (!snap.exists()) {
-          annList.innerHTML = `<div style="color:#6b7280">No announcements yet.</div>`;
+          box.innerHTML = "<div style='color:#666'>No announcements.</div>";
           return;
         }
 
-        const arr = [];
-        snap.forEach(s => arr.push({ id:s.key, ...s.val() }));
-        arr.reverse();
+        const list = [];
+        snap.forEach(s => list.push({ id: s.key, ...s.val() }));
+        list.reverse();
 
-        arr.forEach(a => {
-          annList.insertAdjacentHTML("beforeend", `
+        list.forEach(a => {
+          box.insertAdjacentHTML("beforeend", `
             <div class="ann">
               <div>
                 <h3>${escapeHtml(a.title)}</h3>
                 <p>${escapeHtml(a.message)}</p>
                 <div class="meta">
-                  ${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}
+                  Posted by ${escapeHtml(a.postedBy)} ·
+                  ${new Date(a.timestamp).toLocaleString()}
                 </div>
               </div>
-              <div class="actions">
+              <div>
                 <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
                 <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
               </div>
@@ -215,44 +260,42 @@
           `);
         });
       });
-  });
-
-  signOutBtn.onclick = () =>
-    auth.signOut().then(() => location.href="index.html");
-
-  postBtn.onclick = () => {
-    if (!title.value || !message.value) return alert("Fill all fields");
-    db.ref("announcements").push({
-      title:title.value.trim(),
-      message:message.value.trim(),
-      timestamp:Date.now(),
-      postedBy:auth.currentUser.email
-    });
-    title.value=""; message.value="";
-  };
+  }
 
   function editAnn(id) {
-    db.ref("announcements/"+id).once("value").then(s => {
-      const v=s.val();
-      const nt=prompt("Edit title:",v.title);
-      if(nt===null) return;
-      const nm=prompt("Edit message:",v.message);
-      if(nm===null) return;
-      db.ref("announcements/"+id).update({title:nt,message:nm});
+    db.ref("announcements/" + id).once("value").then(snap => {
+      const data = snap.val();
+      if (!data) return;
+
+      const nt = prompt("Edit title:", data.title);
+      if (nt === null) return;
+
+      const nm = prompt("Edit message:", data.message);
+      if (nm === null) return;
+
+      db.ref("announcements/" + id).update({
+        title: nt,
+        message: nm,
+        editedAt: Date.now()
+      });
     });
   }
 
   function delAnn(id) {
-    if(confirm("Delete this announcement?"))
-      db.ref("announcements/"+id).remove();
+    if (confirm("Delete this announcement?")) {
+      db.ref("announcements/" + id).remove();
+    }
   }
 
   function escapeHtml(t) {
-    return String(t??"").replace(/[&<>]/g,c=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;"
+    return String(t ?? "").replace(/[&<>]/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;"
     }[c]));
   }
 </script>
+
 
 </body>
 </html>
