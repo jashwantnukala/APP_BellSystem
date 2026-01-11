@@ -1,143 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Announcements — Student</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Teacher Dashboard — Announcements</title>
 
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Inter, sans-serif;
-      background: #eef3ff;
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    :root {
+      --accent:#4f46e5;
+      --danger:#dc2626;
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --text:#111827;
+      --border:#e5e7eb;
     }
 
-    h1 {
-      font-size: 26px;
-      margin-bottom: 18px;
+    * { box-sizing: border-box; }
+
+    body {
+      margin:0;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background:white;
+      border-bottom:1px solid var(--border);
+      padding:18px 28px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    header h1 {
+      margin:0;
+      font-size:22px;
+      font-weight:700;
+    }
+
+    header button {
+      background:var(--danger);
+      color:white;
+      border:none;
+      border-radius:10px;
+      padding:10px 16px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    main {
+      max-width:1100px;
+      margin:32px auto;
+      padding:0 20px;
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:28px;
     }
 
     .card {
-      width: 100%;
-      max-width: 900px;
-      background: white;
-      padding: 22px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.05);
+      padding:22px;
     }
+
+    .card h2 {
+      margin:0 0 14px;
+      font-size:18px;
+    }
+
+    input, textarea {
+      width:100%;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font-size:15px;
+      margin-bottom:12px;
+    }
+
+    textarea { resize:vertical; min-height:110px; }
+
+    .primary {
+      background:var(--accent);
+      color:white;
+      border:none;
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    #annList { display:flex; flex-direction:column; gap:16px; }
 
     .ann {
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 14px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:14px;
     }
 
-    .ann h3 {
-      margin: 0 0 6px;
-      font-size: 17px;
+    .meta {
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
     }
 
-    .ann p {
-      margin: 0 0 6px;
-      font-size: 15px;
+    .actions {
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
 
-    .time {
-      font-size: 13px;
-      color: #6b7280;
+    .small-btn {
+      border:none;
+      border-radius:10px;
+      padding:8px 12px;
+      font-size:13px;
+      cursor:pointer;
+      font-weight:600;
     }
 
-    .empty {
-      color: #6b7280;
-      text-align: center;
-      padding: 18px;
+    .edit { background:#fef3c7; }
+    .delete { background:#fee2e2; }
+
+    @media (max-width:900px) {
+      main { grid-template-columns:1fr; }
     }
   </style>
 </head>
 
 <body>
 
-  <h1>📢 Announcements</h1>
+<header>
+  <h1>📣 Teacher Announcements</h1>
+  <button id="signOutBtn">Sign Out</button>
+</header>
 
-  <div class="card" id="annList">Loading…</div>
+<main>
+  <section class="card">
+    <h2>Post Announcement</h2>
+    <input id="title" placeholder="Announcement title">
+    <textarea id="message" placeholder="Write announcement message..."></textarea>
+    <button class="primary" id="postBtn">Publish</button>
+  </section>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <section class="card">
+    <h2>All Announcements</h2>
+    <div id="annList">Loading…</div>
+  </section>
+</main>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-      authDomain: "digitalbellplisworkthistime.firebaseapp.com",
-      databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-      projectId: "digitalbellplisworkthistime",
-      storageBucket: "digitalbellplisworkthistime.appspot.com",
-      messagingSenderId: "829189847707",
-      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
-    };
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    // Safe Firebase initialization (prevents double-init failure)
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+<script>
+  const firebaseConfig = {
+    apiKey:"AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
+    authDomain:"digitalbellplisworkthistime.firebaseapp.com",
+    databaseURL:"https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
+    projectId:"digitalbellplisworkthistime",
+    storageBucket:"digitalbellplisworkthistime.appspot.com",
+    messagingSenderId:"829189847707",
+    appId:"1:829189847707:web:99b13d5fe551b54d9ce43e"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+  const db = firebase.database();
+  const auth = firebase.auth();
+  const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
+
+  // Auth listener + load announcements after confirmed
+  auth.onAuthStateChanged(user => {
+    if (!user) return; // wait for auth
+
+    if (user.uid !== adminUID) {
+      location.href="index.html";
+      return;
     }
 
-    const db = firebase.database();
-    const box = document.getElementById("annList");
+    loadAnnouncements();
+  });
 
-    // Load announcements
+  signOutBtn.onclick = () => auth.signOut().then(()=>location.href="index.html");
+
+  postBtn.onclick = () => {
+    if(!title.value || !message.value) return alert("Fill all fields");
+
+    db.ref("announcements").push({
+      title: title.value.trim(),
+      message: message.value.trim(),
+      timestamp: Date.now(),
+      postedBy: auth.currentUser.email
+    });
+
+    title.value=""; message.value="";
+  };
+
+  function loadAnnouncements() {
     db.ref("announcements")
       .orderByChild("timestamp")
       .on("value", snap => {
-        box.innerHTML = "";
+        annList.innerHTML = "";
 
         if (!snap.exists()) {
-          box.innerHTML = `<div class="empty">No announcements available.</div>`;
+          annList.innerHTML = `<div style="color:#6b7280">No announcements yet.</div>`;
           return;
         }
 
-        const items = [];
-        snap.forEach(child => {
-          const v = child.val() || {};
-          items.push({
-            title: v.title || "Untitled",
-            message: v.message || "",
-            postedBy: v.postedBy || "Teacher",
-            timestamp: v.timestamp || 0
-          });
-        });
+        const arr = [];
+        snap.forEach(s => arr.push({ id:s.key, ...s.val() }));
+        arr.reverse();
 
-        items.reverse();
-
-        items.forEach(a => {
-          const timeText = a.timestamp
-            ? new Date(a.timestamp).toLocaleString()
-            : "Time not available";
-
-          box.insertAdjacentHTML("beforeend", `
+        arr.forEach(a => {
+          annList.insertAdjacentHTML("beforeend", `
             <div class="ann">
-              <h3>${escapeHtml(a.title)}</h3>
-              <p>${escapeHtml(a.message)}</p>
-              <div class="time">
-                Posted by ${escapeHtml(a.postedBy)} • ${timeText}
+              <div>
+                <h3>${escapeHtml(a.title)}</h3>
+                <p>${escapeHtml(a.message)}</p>
+                <div class="meta">${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}</div>
+              </div>
+              <div class="actions">
+                <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
+                <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
               </div>
             </div>
           `);
         });
       });
+  }
 
-    function escapeHtml(t) {
-      return String(t ?? "").replace(/[&<>]/g, c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;"
-      }[c]));
-    }
-  </script>
+  function editAnn(id) {
+    db.ref("announcements/"+id).once("value").then(snap=>{
+      const v = snap.val();
+      if(!v) return;
+      const nt = prompt("Edit title:", v.title);
+      if(nt===null) return;
+      const nm = prompt("Edit message:", v.message);
+      if(nm===null) return;
+      db.ref("announcements/"+id).update({title:nt,message:nm});
+    });
+  }
+
+  function delAnn(id) {
+    if(confirm("Delete this announcement?")) db.ref("announcements/"+id).remove();
+  }
+
+  function escapeHtml(t) {
+    return String(t??"").replace(/[&<>]/g, c => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;"
+    }[c]));
+  }
+</script>
 
 </body>
 </html>
