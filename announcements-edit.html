@@ -26,7 +26,6 @@
       color: var(--text-dark);
     }
 
-    /* HEADER */
     .nav {
       width: 95%;
       max-width: 950px;
@@ -44,7 +43,6 @@
       gap: 10px;
     }
 
-    /* BUTTONS */
     button {
       cursor: pointer;
       border: none;
@@ -59,11 +57,7 @@
       color: white;
       box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
     }
-    #signOutBtn:hover {
-      filter: brightness(1.1);
-    }
 
-    /* CARD CONTAINER */
     .card {
       width: 95%;
       max-width: 950px;
@@ -75,48 +69,6 @@
       box-shadow: 0 8px 30px rgba(0,0,0,0.1);
     }
 
-    .card h2 {
-      font-size: 21px;
-      font-weight: 600;
-      margin-top: 0;
-      margin-bottom: 14px;
-    }
-
-    /* INPUTS */
-    input, textarea {
-      width: 100%;
-      font-size: 16px;
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(0,0,0,0.15);
-      margin-bottom: 12px;
-      transition: 0.25s;
-    }
-
-    input:focus, textarea:focus {
-      border-color: var(--accent);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(45,102,255,0.2);
-    }
-
-    textarea { min-height: 100px; resize: vertical; }
-
-    /* POST BUTTON */
-    .primary {
-      background: var(--accent);
-      color: white;
-      font-size: 16px;
-      padding: 12px 20px;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(45,102,255,0.3);
-      transition: 0.2s;
-    }
-    .primary:hover {
-      filter: brightness(1.08);
-      transform: translateY(-1px);
-    }
-
-    /* ANNOUNCEMENT BOX */
     .ann {
       background: white;
       padding: 18px;
@@ -127,10 +79,6 @@
       justify-content: space-between;
       gap: 14px;
       border-left: 5px solid var(--accent);
-      transition: 0.2s;
-    }
-    .ann:hover {
-      transform: translateY(-2px);
     }
 
     .small-btn {
@@ -139,14 +87,10 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      transition: 0.2s;
     }
 
     .edit { background: #fff7c2; }
     .delete { background: #ffd1d1; }
-
-    .edit:hover { filter: brightness(1.05); }
-    .delete:hover { filter: brightness(1.07); }
 
     .meta {
       font-size: 13px;
@@ -154,7 +98,6 @@
       color: var(--muted);
     }
 
-    /* SUCCESS TOAST */
     #successToast {
       position: fixed;
       bottom: 28px;
@@ -165,11 +108,11 @@
       border-radius: 14px;
       font-size: 15px;
       opacity: 0;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
       transform: translateY(20px);
       transition: 0.4s ease;
       pointer-events: none;
     }
+
     #successToast.show {
       opacity: 1;
       transform: translateY(0);
@@ -201,7 +144,7 @@
 
   <div class="card">
     <h2>All Announcements</h2>
-    <div id="annList">Loading...</div>
+    <div id="annList">Loading…</div>
   </div>
 
   <a href="index-teacher.html" class="home">← Back to Home</a>
@@ -215,37 +158,39 @@
 
   <script>
     const firebaseConfig = {
-      apiKey:"AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
-      authDomain:"digitalbellplisworkthistime.firebaseapp.com",
-      databaseURL:"https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
-      projectId:"digitalbellplisworkthistime",
-      storageBucket:"digitalbellplisworkthistime.firebasestorage.app",
-      messagingSenderId:"829189847707",
-      appId:"1:829189847707:web:99b13d5fe551b54d9ce43e"
+      apiKey: "AIzaSyB3Lv_9EiVBVy5aXwiYOn0pgZu31ykFOGM",
+      authDomain: "digitalbellplisworkthistime.firebaseapp.com",
+      databaseURL: "https://digitalbellplisworkthistime-default-rtdb.firebaseio.com",
+      projectId: "digitalbellplisworkthistime",
+      storageBucket: "digitalbellplisworkthistime.appspot.com",
+      messagingSenderId: "829189847707",
+      appId: "1:829189847707:web:99b13d5fe551b54d9ce43e"
     };
-    firebase.initializeApp(firebaseConfig);
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
 
     const db = firebase.database();
     const auth = firebase.auth();
+    const annList = document.getElementById("annList");
 
     const adminUID = "lPvZ7WGuTVP1LcYvKjGYtOj1GBD3";
 
     auth.onAuthStateChanged(user => {
-      if (!user || user.uid !== adminUID) location.href = "index.html";
+      if (!user || user.uid !== adminUID) {
+        location.href = "index.html";
+        return;
+      }
+      loadAnnouncements();
     });
 
     document.getElementById("signOutBtn").onclick =
       () => auth.signOut().then(() => location.href = "index.html");
 
-    function showToast() {
-      const t = document.getElementById("successToast");
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2000);
-    }
-
     document.getElementById("postBtn").onclick = () => {
-      const t = document.getElementById("title").value.trim();
-      const m = document.getElementById("message").value.trim();
+      const t = title.value.trim();
+      const m = message.value.trim();
 
       if (!t || !m) return alert("Fill all fields");
 
@@ -257,55 +202,53 @@
       });
 
       showToast();
-      document.getElementById("title").value = "";
-      document.getElementById("message").value = "";
+      title.value = "";
+      message.value = "";
     };
 
-    db.ref("announcements")
-      .orderByChild("timestamp")
-      .on("value", snap => {
-        const box = document.getElementById("annList");
-        box.innerHTML = "";
+    function loadAnnouncements() {
+      db.ref("announcements")
+        .orderByChild("timestamp")
+        .on("value", snap => {
+          annList.innerHTML = "";
 
-        if (!snap.exists()) {
-          box.innerHTML = `<div style="color:#666">No announcements.</div>`;
-          return;
-        }
+          if (!snap.exists()) {
+            annList.innerHTML = `<div style="color:#666">No announcements.</div>`;
+            return;
+          }
 
-        const arr = [];
-        snap.forEach(s => arr.push({ id:s.key, ...s.val() }));
-        arr.reverse();
+          const list = [];
+          snap.forEach(s => list.push({ id: s.key, ...s.val() }));
+          list.reverse();
 
-        arr.forEach(a => {
-          box.insertAdjacentHTML("beforeend", `
-            <div class="ann">
-              <div>
-                <h3>${escapeHtml(a.title)}</h3>
-                <p>${escapeHtml(a.message)}</p>
-                <div class="meta">
-                  Posted by ${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}
+          list.forEach(a => {
+            annList.insertAdjacentHTML("beforeend", `
+              <div class="ann">
+                <div>
+                  <h3>${escapeHtml(a.title)}</h3>
+                  <p>${escapeHtml(a.message)}</p>
+                  <div class="meta">
+                    Posted by ${escapeHtml(a.postedBy)} · ${new Date(a.timestamp).toLocaleString()}
+                  </div>
+                </div>
+                <div>
+                  <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
+                  <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
                 </div>
               </div>
-
-              <div>
-                <button class="small-btn edit" onclick="editAnn('${a.id}')">Edit</button>
-                <button class="small-btn delete" onclick="delAnn('${a.id}')">Delete</button>
-              </div>
-            </div>
-          `);
+            `);
+          });
         });
-      });
+    }
 
     function editAnn(id) {
-      db.ref("announcements/"+id).once("value").then(s => {
+      db.ref("announcements/" + id).once("value").then(s => {
         const v = s.val();
         const nt = prompt("Edit title:", v.title);
         if (nt === null) return;
-
         const nm = prompt("Edit message:", v.message);
         if (nm === null) return;
-
-        db.ref("announcements/"+id).update({
+        db.ref("announcements/" + id).update({
           title: nt,
           message: nm,
           editedAt: Date.now()
@@ -314,13 +257,24 @@
     }
 
     function delAnn(id) {
-      if (confirm("Delete this announcement?"))
-        db.ref("announcements/"+id).remove();
+      if (confirm("Delete this announcement?")) {
+        db.ref("announcements/" + id).remove();
+      }
+    }
+
+    function showToast() {
+      const t = document.getElementById("successToast");
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2000);
     }
 
     function escapeHtml(t) {
       return String(t ?? "")
-        .replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;"," >":"&gt;" }[c]));
+        .replace(/[&<>]/g, c => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;"
+        }[c]));
     }
   </script>
 
