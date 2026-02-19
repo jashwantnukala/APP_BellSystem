@@ -2,131 +2,512 @@
 <html lang="en">
 <head>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
-  <meta charset="UTF-8">
-  <meta-name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Smart Bell System</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CLG Sync App</title>
   <style>
+    :root {
+      --bg: #edf4ff;
+      --card: #ffffff;
+      --text: #102a43;
+      --muted: #6b7a90;
+      --line: #d9e8ff;
+      --blue-1: #5cb7ff;
+      --blue-2: #3b82f6;
+      --blue-3: #265fd0;
+      --ok: #2f9e44;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f7f7f7; /* OFF-WHITE BACKGROUND */
-      color: #1a1a1a;
       margin: 0;
-      text-align: center;
+      background: radial-gradient(circle at top left, #f8fbff, var(--bg));
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
     }
 
-    header {
-      padding: 40px 0 20px;
+    .app {
+      width: min(460px, 100%);
+      background: linear-gradient(180deg, #f7fbff, #eaf3ff 60%, #f7fbff);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 16px;
+      box-shadow: 0 28px 70px rgba(34, 69, 129, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 6px;
     }
 
-    /* Standard Buttons */
-    button, a {
-      display: inline-block;
-      text-decoration: none;
-      background-color: #0077cc;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      margin: 10px;
-      font-weight: bold;
-      transition: 0.3s;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
+    .title { font-size: 25px; font-weight: 800; margin: 8px 0 2px; }
+    .subtitle { font-size: 13px; color: var(--muted); margin: 0; }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #e7f0ff;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
     }
 
-    button:hover, a:hover {
-      background-color: #005fa3;
+    .btn-row { display: flex; gap: 8px; }
+    .chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chip.active { background: linear-gradient(120deg, var(--blue-1), var(--blue-2)); color: #fff; border: 0; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(38, 95, 208, 0.08);
     }
 
-    /* 🔔 Bell Simulator Special Button */
-    .bell-btn {
-      background: #ffcc00;
-      color: #1a1a1a;
-      font-size: 1.1rem;
-      padding: 18px 32px;
-      border-radius: 50px;
-      font-weight: 600;
+    .next-class {
+      background: linear-gradient(135deg, var(--blue-2), #8ecfff);
+      color: #fff;
+      padding: 14px;
+      border-radius: 18px;
+    }
+
+    .next-class .mini {
+      background: rgba(255,255,255,0.94);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px;
       margin-top: 10px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-      transition: 0.3s;
-    }
-    .bell-btn:hover {
-      background: #e6b800;
-      transform: translateY(-2px);
     }
 
-    #login-box {
-      margin-top: 30px;
-      padding: 20px;
-      display: none;
+    .hscroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: thin;
     }
 
-    input {
+    .day-chip {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fff;
+      min-width: 92px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2b4d73;
+    }
+    .day-chip.active { background: #dbeaff; border-color: #8fb9ff; }
+
+    .class-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
       padding: 10px;
-      width: 250px;
-      border-radius: 5px;
-      border: 1px solid #aaa;
-      margin: 10px 0;
+      margin-top: 10px;
+      background: #fff;
     }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      color: #fff;
+      background: linear-gradient(150deg, #73c2ff, #3b82f6);
+    }
+
+    .meta { margin-left: auto; text-align: right; color: #355372; font-size: 13px; }
+    .meta strong { display: block; color: #123960; }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .sim-stat { background: #f8fbff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+    .sim-stat .label { font-size: 12px; color: var(--muted); }
+    .sim-stat .value { font-weight: 800; margin-top: 2px; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #e8f1ff;
+      color: #1d4f8e;
+    }
+    .btn.primary { background: linear-gradient(100deg, var(--blue-1), var(--blue-2)); color: #fff; }
+
+    .small { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .hidden { display: none; }
+
+    .nav {
+      position: sticky;
+      bottom: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .nav button {
+      border: none;
+      background: transparent;
+      border-radius: 12px;
+      padding: 9px 6px;
+      font-size: 12px;
+      color: #5e7693;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .nav button.active { background: #eaf3ff; color: #2662c7; }
+
+    .text-danger { color: #b42318; font-size: 13px; }
   </style>
 </head>
 <body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="subtitle" id="greeting">Good day</p>
+        <h1 class="title">CLG Sync</h1>
+      </div>
+      <div class="avatar">👨‍🎓</div>
+    </header>
 
-  <header>
-    <h1>🔔 Digital Smart Bell System</h1>
-    <p>Manage and View Class Timetables Securely</p>
-  </header>
+    <div class="btn-row">
+      <button class="chip active" id="batch1Btn">Batch 1</button>
+      <button class="chip" id="batch2Btn">Batch 2</button>
+      <button class="chip" id="logoutBtn">Logout</button>
+    </div>
 
-  <!-- 🔔 Bell Simulator Button (NEW + Centered + Premium Style) -->
-  <button class="bell-btn" onclick="window.location.href='simulator.html'">
-    Open Digital Bell Simulator
-  </button>
+    <section class="next-class" id="nextClassCard">
+      <strong>Next Class</strong>
+      <div class="mini" id="nextClassInfo">Loading next class...</div>
+    </section>
 
-  <h2>Select Your Role</h2>
+    <section class="card">
+      <strong>Scrollable Class Calendar</strong>
+      <p class="small">Tap a day to view that day's classes for selected batch.</p>
+      <div class="hscroll" id="dayScroll"></div>
+      <div id="dayClasses"></div>
+    </section>
 
-  <!-- STUDENT BUTTON — DIRECT REDIRECT -->
-  <button onclick="window.location.href='index-student.html'">I am a Student</button>
+    <section class="card">
+      <strong>Bell Simulator</strong>
+      <div class="sim-grid">
+        <div class="sim-stat"><div class="label">Current Time</div><div id="clock" class="value">--:--:--</div></div>
+        <div class="sim-stat"><div class="label">Status</div><div id="status" class="value">Waiting</div></div>
+        <div class="sim-stat"><div class="label">Next Bell In</div><div id="nextBell" class="value">--:--:--</div></div>
+        <div class="sim-stat"><div class="label">Last Ring</div><div id="lastRing" class="value">Never</div></div>
+      </div>
+      <div class="actions">
+        <button id="autoBtn" class="btn primary">Auto Bell: ON</button>
+        <button id="soundBtn" class="btn">Sound: ON</button>
+        <button id="enableBtn" class="btn">Enable Sound</button>
+        <button id="ringNowBtn" class="btn">Ring Now</button>
+      </div>
+      <p class="small">Simulator auto-rings at class start and end times from your timetable.</p>
+    </section>
 
-  <!-- TEACHER BUTTON — SHOW LOGIN -->
-  <button onclick="selectTeacher()">I am a Teacher</button>
+    <p id="error" class="text-danger"></p>
 
-  <div id="login-box">
-    <h3>Login</h3>
-    <input id="email" type="email" placeholder="Enter Email"><br>
-    <input id="password" type="password" placeholder="Enter Password"><br>
-    <button onclick="login()">Login</button>
-  </div>
+    <nav class="nav">
+      <button class="active">Home</button>
+      <button onclick="location.href='view.html'">Timetable</button>
+      <button onclick="location.href='announcements-view.html'">Announcements</button>
+      <button onclick="location.href='recent.html'">Updates</button>
+    </nav>
+  </main>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
   <script src="firebase-config.js"></script>
 
   <script>
-    function selectTeacher() {
-      document.getElementById('login-box').style.display = 'block';
-    }
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const role = params.get('role') || 'student';
+      const allowedTeachers = [
+        'jashwantnukala2025.comp@mmcoe.edu.in',
+        'teacher2@school.com'
+      ];
 
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const greetingEl = document.getElementById('greeting');
+      const dayScroll = document.getElementById('dayScroll');
+      const dayClassesEl = document.getElementById('dayClasses');
+      const nextClassInfo = document.getElementById('nextClassInfo');
+      const errorEl = document.getElementById('error');
 
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "index-teacher.html";
-        })
-        .catch(err => alert(err.message));
-    }
+      const clockEl = document.getElementById('clock');
+      const statusEl = document.getElementById('status');
+      const nextBellEl = document.getElementById('nextBell');
+      const lastRingEl = document.getElementById('lastRing');
+      const autoBtn = document.getElementById('autoBtn');
+      const soundBtn = document.getElementById('soundBtn');
+      const enableBtn = document.getElementById('enableBtn');
+
+      let selectedBatch = 'Batch1';
+      let selectedDay = dayNames[new Date().getDay() - 1] || 'Monday';
+      let rows = [];
+      let autoOn = true;
+      let soundOn = true;
+      let audioCtx = null;
+      const rungKeys = new Set();
+
+      if (role === 'teacher') {
+        firebase.auth().onAuthStateChanged(user => {
+          if (!user || !allowedTeachers.includes((user.email || '').toLowerCase())) {
+            location.href = 'index.html';
+          }
+        });
+      }
+
+      const hour = new Date().getHours();
+      greetingEl.textContent = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+      function parseRange(timeStr) {
+        const regex = /(\d{1,2}:\d{2})\s*(am|pm|AM|PM)?/g;
+        const matches = [...String(timeStr || '').matchAll(regex)];
+        if (!matches.length) return { start: null, end: null };
+        const toTs = (s, mer) => {
+          let [h,m] = s.split(':').map(Number);
+          if (mer) {
+            mer = mer.toLowerCase();
+            if (mer === 'pm' && h < 12) h += 12;
+            if (mer === 'am' && h === 12) h = 0;
+          }
+          const d = new Date();
+          return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m, 0, 0).getTime();
+        };
+        const first = matches[0], last = matches[matches.length - 1];
+        return { start: toTs(first[1], first[2] || last[2]), end: toTs(last[1], last[2] || first[2]) };
+      }
+
+      function renderDayChips() {
+        dayScroll.innerHTML = '';
+        dayNames.forEach(day => {
+          const chip = document.createElement('button');
+          chip.className = 'day-chip' + (day === selectedDay ? ' active' : '');
+          chip.textContent = day.slice(0,3) + '\n' + day.slice(3);
+          chip.onclick = () => {
+            selectedDay = day;
+            renderDayChips();
+            renderDayClasses();
+          };
+          dayScroll.appendChild(chip);
+        });
+      }
+
+      function safeCell(row, day) {
+        const cell = row && row[day] ? row[day] : {};
+        return {
+          subject: cell.subject || 'No subject',
+          room: cell.room || 'Room N/A'
+        };
+      }
+
+      function renderDayClasses() {
+        dayClassesEl.innerHTML = '';
+        if (!rows.length) {
+          dayClassesEl.innerHTML = '<p class="small">No timetable available.</p>';
+          return;
+        }
+
+        rows.forEach((row, i) => {
+          const cell = safeCell(row, selectedDay);
+          const div = document.createElement('div');
+          div.className = 'class-item';
+          div.innerHTML = `
+            <div class="icon">${i + 1}</div>
+            <div>
+              <strong>${escapeHtml(cell.subject)}</strong>
+              <div class="small">${escapeHtml(row.time || 'N/A')}</div>
+            </div>
+            <div class="meta"><strong>${escapeHtml(cell.room)}</strong>${escapeHtml(selectedDay)}</div>
+          `;
+          dayClassesEl.appendChild(div);
+        });
+
+        const next = findNextClass();
+        if (!next) {
+          nextClassInfo.innerHTML = '<strong>No upcoming class today</strong><br><span class="small">Switch day/batch to preview schedule.</span>';
+        } else {
+          nextClassInfo.innerHTML = `<strong>${escapeHtml(next.subject)}</strong><br>${escapeHtml(next.time)}<br>${escapeHtml(next.room)}`;
+        }
+      }
+
+      function findNextClass() {
+        const now = Date.now();
+        const today = dayNames[new Date().getDay() - 1] || 'Monday';
+        const events = rows.map(row => {
+          const p = parseRange(row.time);
+          const c = safeCell(row, today);
+          return { ts: p.start, time: row.time || 'N/A', subject: c.subject, room: c.room };
+        }).filter(e => e.ts && e.ts > now).sort((a,b) => a.ts - b.ts);
+        return events[0] || null;
+      }
+
+      function timeLeft(ms) {
+        if (!ms || ms <= 0) return '00:00:00';
+        const s = Math.floor(ms / 1000);
+        const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+        const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        return `${hh}:${mm}:${ss}`;
+      }
+
+      function ring(message, tsKey) {
+        if (rungKeys.has(tsKey)) return;
+        rungKeys.add(tsKey);
+        lastRingEl.textContent = new Date().toLocaleTimeString();
+        statusEl.textContent = 'Ringing';
+        if (soundOn) playBellSound();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try { new Notification('Bell', { body: message }); } catch (_) {}
+        }
+        setTimeout(() => statusEl.textContent = 'Waiting', 1200);
+        setTimeout(() => rungKeys.delete(tsKey), 50000);
+      }
+
+      function playBellSound() {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const now = audioCtx.currentTime;
+          [880, 660].forEach((f, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.frequency.value = f;
+            o.type = 'sine';
+            g.gain.setValueAtTime(0.0001, now);
+            g.gain.exponentialRampToValueAtTime(0.15 / (i + 1), now + 0.03 + i * 0.03);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + 1);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(now + i * 0.03); o.stop(now + 1);
+          });
+        } catch (_) {}
+      }
+
+      function runBellLoop() {
+        const now = Date.now();
+        const today = dayNames[new Date().getDay() - 1] || 'Monday';
+        let nearest = null;
+
+        rows.forEach((row) => {
+          const c = safeCell(row, today);
+          const p = parseRange(row.time);
+          [p.start, p.end].forEach((ts, idx) => {
+            if (!ts) return;
+            if (!nearest || (ts > now && ts < nearest)) nearest = ts;
+            if (autoOn && now >= ts - 800 && now <= ts + 900) {
+              ring((idx === 0 ? 'Class started: ' : 'Class ended: ') + c.subject, Math.floor(ts / 1000));
+            }
+          });
+        });
+
+        nextBellEl.textContent = nearest ? timeLeft(nearest - now) : '--:--:--';
+      }
+
+      function escapeHtml(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function loadBatch(batch) {
+        selectedBatch = batch;
+        document.getElementById('batch1Btn').classList.toggle('active', batch === 'Batch1');
+        document.getElementById('batch2Btn').classList.toggle('active', batch === 'Batch2');
+        errorEl.textContent = '';
+
+        firebase.database().ref('timetables/' + batch).once('value').then((snap) => {
+          rows = snap.exists() ? snap.val() : [];
+          renderDayClasses();
+        }).catch((e) => {
+          errorEl.textContent = e.message || 'Unable to load timetable';
+          rows = [];
+          renderDayClasses();
+        });
+      }
+
+      document.getElementById('batch1Btn').onclick = () => loadBatch('Batch1');
+      document.getElementById('batch2Btn').onclick = () => loadBatch('Batch2');
+
+      document.getElementById('logoutBtn').onclick = () => {
+        firebase.auth().signOut().finally(() => {
+          location.href = 'index.html';
+        });
+      };
+
+      autoBtn.onclick = () => {
+        autoOn = !autoOn;
+        autoBtn.textContent = 'Auto Bell: ' + (autoOn ? 'ON' : 'OFF');
+        autoBtn.classList.toggle('primary', autoOn);
+      };
+
+      soundBtn.onclick = () => {
+        soundOn = !soundOn;
+        soundBtn.textContent = 'Sound: ' + (soundOn ? 'ON' : 'OFF');
+      };
+
+      enableBtn.onclick = async () => {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') await audioCtx.resume();
+        } catch (_) {}
+
+        if ('Notification' in window) {
+          try { await Notification.requestPermission(); } catch (_) {}
+        }
+        enableBtn.textContent = 'Enabled ✓';
+      };
+
+      document.getElementById('ringNowBtn').onclick = () => {
+        ring('Manual bell', 'manual-' + Math.floor(Date.now() / 1000));
+      };
+
+      renderDayChips();
+      loadBatch('Batch1');
+      setInterval(() => {
+        clockEl.textContent = new Date().toLocaleTimeString();
+        runBellLoop();
+      }, 1000);
+    })();
   </script>
-
 </body>
 </html>
-
-
